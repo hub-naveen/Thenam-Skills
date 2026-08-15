@@ -1,0 +1,6 @@
+{
+  "name": "THENAM Skills",
+  "description": "Student-centric edtech and professional skills ecosystem with verified certificates, automated learning activities, talent discovery, and peer network.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

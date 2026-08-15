@@ -1,0 +1,91 @@
+import { NetworkConnection } from '../types';
+
+export const INITIAL_CONNECTIONS: NetworkConnection[] = [
+  {
+    id: 'usr_ananya_02',
+    name: 'Ananya Sharma',
+    headline: 'Full-Stack Developer & Cloud Architect',
+    college: 'Anna University, CEG Campus',
+    location: 'Chennai, India',
+    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=80',
+    coverImage: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&auto=format&fit=crop&q=80',
+    mutualConnections: 24,
+    skills: ['React', 'TypeScript', 'Node.js', 'AWS', 'Docker', 'Go'],
+    status: 'connected',
+    role: 'student',
+    bio: 'Building resilient cloud-native web applications with React, Go, and AWS.',
+    verifiedBadges: ['Top 5% Web Dev', 'AWS Certified']
+  },
+  {
+    id: 'usr_rohit_03',
+    name: 'Rohit Varma',
+    headline: 'Cybersecurity Analyst & Ethical Hacker',
+    college: 'SSN College of Engineering',
+    location: 'Chennai, India',
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
+    coverImage: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80',
+    mutualConnections: 18,
+    skills: ['Cybersecurity', 'Penetration Testing', 'Python', 'Linux', 'Network Security'],
+    status: 'connected',
+    role: 'student',
+    bio: 'CTF Player, Web Security researcher. Penetration tester.',
+    verifiedBadges: ['Hackathon Champion']
+  },
+  {
+    id: 'usr_priya_04',
+    name: 'Priya Sundaram',
+    headline: 'UI/UX Designer & Design Systems Lead',
+    college: 'NIFT Chennai',
+    location: 'Chennai, India',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&auto=format&fit=crop&q=80',
+    coverImage: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80',
+    mutualConnections: 12,
+    skills: ['Figma', 'Design Systems', 'UI/UX Design', 'Tailwind CSS'],
+    status: 'pending',
+    role: 'student',
+    bio: 'Crafting human-centered micro-interactions and scalable design systems.',
+    verifiedBadges: ['Design Lead']
+  },
+  {
+    id: 'usr_karthik_05',
+    name: 'Karthik Subramanian',
+    headline: 'Data Engineer & Big Data Specialist',
+    college: 'SRM Institute of Science and Technology',
+    location: 'Chennai, India',
+    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop&q=80',
+    mutualConnections: 15,
+    skills: ['SQL', 'Apache Spark', 'Python', 'Kafka', 'PostgreSQL'],
+    status: 'none',
+    role: 'student',
+    bio: 'Architecting scalable streaming ETL pipelines with Apache Spark & Snowflake.'
+  },
+  {
+    id: 'usr_mentor_arvind',
+    name: 'Dr. R. Arvind',
+    headline: 'Head of AI Research & Senior Mentor',
+    college: 'THENAM Institute / IIT Madras Alumnus',
+    location: 'Chennai, India',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
+    mutualConnections: 89,
+    skills: ['Computer Vision', 'Deep Learning', 'PyTorch', 'Research Advisory'],
+    status: 'connected',
+    role: 'mentor',
+    isExpert: true,
+    bio: 'Mentoring top student researchers and guiding capstone publications.',
+    verifiedBadges: ['Faculty Mentor', 'Ex-Google Research']
+  },
+  {
+    id: 'usr_recruiter_sanjana',
+    name: 'Sanjana Malhotra',
+    headline: 'University Talent Acquisition Lead @ Nexus AI',
+    college: 'Nexus Tech Global',
+    location: 'Bengaluru / Chennai, India',
+    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80',
+    mutualConnections: 31,
+    skills: ['Campus Recruitment', 'Tech Hiring', 'Internship Programs'],
+    status: 'none',
+    role: 'recruiter',
+    isExpert: true,
+    bio: 'Scouting top 1% engineering talent across Tamil Nadu institutions for AI & Full-Stack roles.'
+  }
+];
