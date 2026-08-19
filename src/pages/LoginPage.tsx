@@ -43,8 +43,13 @@ export default function LoginPage() {
       console.log('Logged in with Google successfully');
     } catch (err: any) {
       console.error('Google Auth error:', err);
-      const errorMessage = err.message || 'Google Authentication failed.';
-      setError(errorMessage.replace('Firebase: ', ''));
+      if (err.code === 'auth/unauthorized-domain') {
+        const currentDomain = window.location.hostname;
+        setError(`This domain (${currentDomain}) is not authorized for Google Sign-In. Please add it to the Authorized Domains list in your Firebase Console (Authentication > Settings > Authorized domains).`);
+      } else {
+        const errorMessage = err.message || 'Google Authentication failed.';
+        setError(errorMessage.replace('Firebase: ', ''));
+      }
     } finally {
       setLoading(false);
     }
