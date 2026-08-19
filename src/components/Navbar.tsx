@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useRouter } from '../context/RouterContext';
+import { useAuth } from '../context/AuthContext';
 
 export const Navbar: React.FC = () => {
   const {
@@ -38,6 +39,7 @@ export const Navbar: React.FC = () => {
   } = useApp();
   
   const { currentPath, navigate } = useRouter();
+  const { logout } = useAuth();
 
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -375,6 +377,17 @@ export const Navbar: React.FC = () => {
                         Admin & Faculty Portal
                       </span>
                       <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-1.5 py-0.5 rounded">Console</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        logout();
+                      }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors text-left mt-1"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
                     </button>
                   </div>
                 </div>

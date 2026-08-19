@@ -4,6 +4,8 @@ import { RouterProvider, useRouter } from './context/RouterContext';
 import { Navbar } from './components/Navbar';
 import { Toast } from './components/Toast';
 import { AutomationCelebrationModal } from './components/AutomationCelebrationModal';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import LoginPage from './pages/LoginPage';
 
 // Pages
 import { HomePage } from './pages/HomePage';
@@ -27,6 +29,7 @@ import { ShieldCheck, Heart, ExternalLink, Sparkles, BookOpen, Award, Users, Lay
 
 const AppContent: React.FC = () => {
   const { currentPath, navigate } = useRouter();
+  const { user, loading } = useAuth();
 
   // Route resolver
   const renderRoute = () => {
@@ -82,6 +85,18 @@ const AppContent: React.FC = () => {
     return <HomePage />;
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-100/70 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginPage />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-100/70 text-slate-800 font-sans flex flex-col selection:bg-indigo-500 selection:text-white">
       {/* Top Fixed Header */}
@@ -128,10 +143,12 @@ const AppContent: React.FC = () => {
 
 export default function App() {
   return (
-    <RouterProvider>
-      <AppProvider>
-        <AppContent />
-      </AppProvider>
-    </RouterProvider>
+    <AuthProvider>
+      <RouterProvider>
+        <AppProvider>
+          <AppContent />
+        </AppProvider>
+      </RouterProvider>
+    </AuthProvider>
   );
 }
