@@ -30,6 +30,61 @@ import { ShieldCheck, Heart, ExternalLink, Sparkles, BookOpen, Award, Users, Lay
 const AppContent: React.FC = () => {
   const { currentPath, navigate } = useRouter();
   const { user, loading } = useAuth();
+  const { currentUser, updateCurrentUser } = useApp();
+
+  React.useEffect(() => {
+    if (user) {
+      const savedKey = `thenam_user_${user.uid}`;
+      
+      // Case 1: Active profile is not for the logged-in Firebase user
+      if (currentUser.id !== user.uid) {
+        const savedUserStr = localStorage.getItem(savedKey);
+        
+        if (savedUserStr) {
+          try {
+            const savedUser = JSON.parse(savedUserStr);
+            updateCurrentUser(savedUser);
+          } catch (e) {
+            console.error('Error loading saved user profile:', e);
+          }
+        } else {
+          // Initialize profile using current state/DEMO_USER as template
+          const providerData = user.providerData?.[0] || {};
+          const newProfile = {
+            ...currentUser,
+            id: user.uid,
+            name: user.displayName || providerData.displayName || user.email?.split('@')[0] || 'Google User',
+            email: user.email || providerData.email || '',
+            avatar: user.photoURL || providerData.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
+            phone: user.phoneNumber || providerData.phoneNumber || currentUser.phone || '',
+          };
+          updateCurrentUser(newProfile);
+          localStorage.setItem(savedKey, JSON.stringify(newProfile));
+        }
+      } else {
+        // Case 2: Profile matches, but check if Google account details changed (sync)
+        const providerData = user.providerData?.[0] || {};
+        const googleName = user.displayName || providerData.displayName;
+        const googleEmail = user.email || providerData.email;
+        const googlePhoto = user.photoURL || providerData.photoURL;
+        const googlePhone = user.phoneNumber || providerData.phoneNumber;
+
+        const nameChanged = googleName && currentUser.name !== googleName;
+        const emailChanged = googleEmail && currentUser.email !== googleEmail;
+        const avatarChanged = googlePhoto && currentUser.avatar !== googlePhoto;
+        const phoneChanged = googlePhone && currentUser.phone !== googlePhone;
+        
+        if (nameChanged || emailChanged || avatarChanged || phoneChanged) {
+          const updatedFields: any = {};
+          if (nameChanged) updatedFields.name = googleName;
+          if (emailChanged) updatedFields.email = googleEmail;
+          if (avatarChanged) updatedFields.avatar = googlePhoto;
+          if (phoneChanged) updatedFields.phone = googlePhone;
+          updateCurrentUser(updatedFields);
+        }
+      }
+    }
+  }, [user, currentUser.id, updateCurrentUser]);
 
   // Route resolver
   const renderRoute = () => {

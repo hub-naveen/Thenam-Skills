@@ -180,6 +180,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Sync to LocalStorage
   useEffect(() => {
     localStorage.setItem('thenam_user', JSON.stringify(currentUser));
+    if (currentUser.id && currentUser.id !== 'usr_naveen_01') {
+      localStorage.setItem(`thenam_user_${currentUser.id}`, JSON.stringify(currentUser));
+    }
   }, [currentUser]);
 
   useEffect(() => {
