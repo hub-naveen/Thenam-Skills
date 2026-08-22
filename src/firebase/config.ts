@@ -1,6 +1,9 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+
 export const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "thenamskills.firebaseapp.com",
@@ -15,6 +18,8 @@ export const app = initializeApp(firebaseConfig);
 // Analytics might not be supported in some environments (like dev without proper config), so it's good to keep it optional or just export it.
 export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const storage = getStorage(app);
 
 export const isFirebaseConfigured = true;
 export const googleProvider = new GoogleAuthProvider();

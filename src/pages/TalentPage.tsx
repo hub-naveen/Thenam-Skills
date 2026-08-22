@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Briefcase,
   Search,
@@ -16,45 +16,47 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useRouter } from '../context/RouterContext';
-import { DEMO_USER, OTHER_STUDENTS } from '../mock/students';
-import { CandidateCard } from '../components/CandidateCard';
 import { StudentProfile } from '../types';
+import { api } from '../services/api';
+import { CandidateCard } from '../components/CandidateCard';
 
 export const TalentPage: React.FC = () => {
   const { currentUser } = useApp();
   const { navigate } = useRouter();
 
-  // Combine currentUser and mock students
-  const allStudents: StudentProfile[] = [currentUser, ...OTHER_STUDENTS];
+  const [allStudents, setAllStudents] = useState<StudentProfile[]>([]);
+
+  useEffect(() => {
+    api.get('/talent')
+      .then((res) => {
+        // Enforce student types structure
+        setAllStudents(res.data);
+      })
+      .catch((err) => console.error('Failed to load talent candidates from Express backend:', err));
+  }, []);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSkill, setSelectedSkill] = useState<string>('all');
   const [selectedCollege, setSelectedCollege] = useState<string>('all');
   const [minCertificates, setMinCertificates] = useState<number>(0);
 
-  const availableSkills = [
-    'All Skills',
-    'Python',
-    'Machine Learning',
-    'SQL',
-    'React',
-    'TypeScript',
-    'Cybersecurity',
-    'AWS',
-    'Docker',
-    'Figma',
-    'UI/UX Design',
-    'Data Science'
-  ];
+  const availableSkills = useMemo(() => {
+    const skills = new Set<string>();
+    allStudents.forEach((student) => {
+      student.skills.forEach((skill) => {
+        if (skill) skills.add(skill);
+      });
+    });
+    return ['All Skills', ...Array.from(skills)];
+  }, [allStudents]);
 
-  const availableColleges = [
-    'All Colleges',
-    'DMI College of Engineering',
-    'Anna University, CEG Campus',
-    'SSN College of Engineering',
-    'NIFT Chennai',
-    'SRM Institute of Science and Technology'
-  ];
+  const availableColleges = useMemo(() => {
+    const colleges = new Set<string>();
+    allStudents.forEach((student) => {
+      if (student.college) colleges.add(student.college);
+    });
+    return ['All Colleges', ...Array.from(colleges)];
+  }, [allStudents]);
 
   const filteredStudents = allStudents.filter(student => {
     const matchesSearch =

@@ -25,10 +25,10 @@ export const AdminPage: React.FC = () => {
   const [recipientName, setRecipientName] = useState('Naveen K');
   const [gradeInput, setGradeInput] = useState('Distinction (98.5%)');
 
-  const handleIssueCustomCredential = (e: React.FormEvent) => {
+  const handleIssueCustomCredential = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCourseId) return;
-    const cert = triggerCourseCompletionAutomation(selectedCourseId);
+    const cert = await triggerCourseCompletionAutomation(selectedCourseId);
     if (cert) {
       showToast(`Credential issued successfully to ${recipientName}!`);
       navigate(`/certificate/${cert.id}`);

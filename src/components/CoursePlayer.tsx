@@ -65,8 +65,8 @@ export const CoursePlayer: React.FC<CoursePlayerProps> = ({ course }) => {
           {isAllModulesCompleted ? (
             <button
               id="btn-view-course-cert"
-              onClick={() => {
-                const cert = triggerCourseCompletionAutomation(course.id);
+              onClick={async () => {
+                const cert = await triggerCourseCompletionAutomation(course.id);
                 if (cert) navigate(`/certificate/${cert.id}`);
               }}
               className="flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl shadow-xs transition-all"

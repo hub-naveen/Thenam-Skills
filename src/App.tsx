@@ -6,6 +6,8 @@ import { Toast } from './components/Toast';
 import { AutomationCelebrationModal } from './components/AutomationCelebrationModal';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
+import StudentOnboardingPage from './pages/StudentOnboardingPage';
+import { ensureUserDocument } from './firebase/firestore';
 
 // Pages
 import { HomePage } from './pages/HomePage';
@@ -24,72 +26,55 @@ import { MessagesPage } from './pages/MessagesPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AdminPage } from './pages/AdminPage';
+import { OpeningSoonPage } from './pages/OpeningSoonPage';
 
-import { ShieldCheck, Heart, ExternalLink, Sparkles, BookOpen, Award, Users, Layers } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 
 const AppContent: React.FC = () => {
   const { currentPath, navigate } = useRouter();
-  const { user, loading } = useAuth();
-  const { currentUser, updateCurrentUser } = useApp();
+  const { user, currentUserProfile, loading } = useAuth();
+  const { showToast } = useApp();
 
+  // Ensure user document exists in Firestore on first login
   React.useEffect(() => {
     if (user) {
-      const savedKey = `thenam_user_${user.uid}`;
-      
-      // Case 1: Active profile is not for the logged-in Firebase user
-      if (currentUser.id !== user.uid) {
-        const savedUserStr = localStorage.getItem(savedKey);
-        
-        if (savedUserStr) {
-          try {
-            const savedUser = JSON.parse(savedUserStr);
-            updateCurrentUser(savedUser);
-          } catch (e) {
-            console.error('Error loading saved user profile:', e);
-          }
-        } else {
-          // Initialize profile using current state/DEMO_USER as template
-          const providerData = user.providerData?.[0] || {};
-          const newProfile = {
-            ...currentUser,
-            id: user.uid,
-            name: user.displayName || providerData.displayName || user.email?.split('@')[0] || 'Google User',
-            email: user.email || providerData.email || '',
-            avatar: user.photoURL || providerData.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
-            phone: user.phoneNumber || providerData.phoneNumber || currentUser.phone || '',
-          };
-          updateCurrentUser(newProfile);
-          localStorage.setItem(savedKey, JSON.stringify(newProfile));
-        }
-      } else {
-        // Case 2: Profile matches, but check if Google account details changed (sync)
-        const providerData = user.providerData?.[0] || {};
-        const googleName = user.displayName || providerData.displayName;
-        const googleEmail = user.email || providerData.email;
-        const googlePhoto = user.photoURL || providerData.photoURL;
-        const googlePhone = user.phoneNumber || providerData.phoneNumber;
-
-        const nameChanged = googleName && currentUser.name !== googleName;
-        const emailChanged = googleEmail && currentUser.email !== googleEmail;
-        const avatarChanged = googlePhoto && currentUser.avatar !== googlePhoto;
-        const phoneChanged = googlePhone && currentUser.phone !== googlePhone;
-        
-        if (nameChanged || emailChanged || avatarChanged || phoneChanged) {
-          const updatedFields: any = {};
-          if (nameChanged) updatedFields.name = googleName;
-          if (emailChanged) updatedFields.email = googleEmail;
-          if (avatarChanged) updatedFields.avatar = googlePhoto;
-          if (phoneChanged) updatedFields.phone = googlePhone;
-          updateCurrentUser(updatedFields);
-        }
-      }
+      ensureUserDocument(user).catch((err) => {
+        console.error('Failed to create/retrieve user database record:', err);
+      });
     }
-  }, [user, currentUser.id, updateCurrentUser]);
+  }, [user]);
+
+  // Intercept and redirect completed users attempting to load onboarding
+  React.useEffect(() => {
+    if (user && currentUserProfile?.profileCompleted === true && currentPath === '/onboarding') {
+      navigate('/home');
+    }
+  }, [user, currentUserProfile, currentPath, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-100/70 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <LoginPage />;
+  }
+
+  // Force onboarding if profile is incomplete
+  if (!currentUserProfile || currentUserProfile.profileCompleted !== true) {
+    return <StudentOnboardingPage />;
+  }
 
   // Route resolver
   const renderRoute = () => {
     const path = currentPath.toLowerCase();
 
+    if (path.startsWith('/onboarding')) {
+      return <StudentOnboardingPage />;
+    }
     if (path.startsWith('/learn')) {
       return <LearnPage />;
     }
@@ -103,19 +88,19 @@ const AppContent: React.FC = () => {
       return <CertificatesPage />;
     }
     if (path.startsWith('/projects') || path.startsWith('/project/')) {
-      return <ProjectsPage />;
+      return <OpeningSoonPage />;
     }
     if (path.startsWith('/events')) {
       return <EventsPage />;
     }
     if (path.startsWith('/communities')) {
-      return <CommunitiesPage />;
+      return <OpeningSoonPage />;
     }
     if (path.startsWith('/talent') || path.startsWith('/search')) {
-      return <TalentPage />;
+      return <OpeningSoonPage />;
     }
     if (path.startsWith('/achievements')) {
-      return <AchievementsPage />;
+      return <OpeningSoonPage />;
     }
     if (path.startsWith('/network')) {
       return <NetworkPage />;
@@ -133,24 +118,27 @@ const AppContent: React.FC = () => {
       return <SettingsPage />;
     }
     if (path.startsWith('/admin')) {
+      // Role protection verification
+      if (currentUserProfile.role !== 'admin' && currentUserProfile.role !== 'faculty') {
+        return (
+          <div className="max-w-md mx-auto mt-20 bg-white border border-slate-200 p-8 rounded-3xl text-center space-y-4 shadow-sm">
+            <h2 className="text-xl font-bold text-rose-600">Access Denied</h2>
+            <p className="text-slate-650 text-xs">You do not have the required permissions to access the Faculty/Admin portal.</p>
+            <button
+              onClick={() => navigate('/home')}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-750 text-white rounded-xl text-xs font-semibold cursor-pointer"
+            >
+              Go Home
+            </button>
+          </div>
+        );
+      }
       return <AdminPage />;
     }
 
     // Default route -> Home
     return <HomePage />;
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-100/70 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <LoginPage />;
-  }
 
   return (
     <div className="min-h-screen bg-slate-100/70 text-slate-800 font-sans flex flex-col selection:bg-indigo-500 selection:text-white">
@@ -184,7 +172,9 @@ const AppContent: React.FC = () => {
             <button onClick={() => navigate('/certificates')} className="hover:text-indigo-600 transition-colors">Certificates</button>
             <button onClick={() => navigate('/projects')} className="hover:text-indigo-600 transition-colors">Projects</button>
             <button onClick={() => navigate('/talent')} className="hover:text-indigo-600 transition-colors">Talent Hub</button>
-            <button onClick={() => navigate('/admin')} className="hover:text-indigo-600 transition-colors">Faculty Portal</button>
+            {(currentUserProfile?.role === 'admin' || currentUserProfile?.role === 'faculty') && (
+              <button onClick={() => navigate('/admin')} className="hover:text-indigo-600 transition-colors">Faculty Portal</button>
+            )}
           </div>
 
           <div className="text-[11px] text-slate-400">

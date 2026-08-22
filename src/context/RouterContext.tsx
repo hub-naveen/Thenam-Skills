@@ -36,7 +36,7 @@ export const RouterProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       const hash = window.location.hash.replace(/^#/, '');
       if (hash && hash !== currentPath) {
         // Prevent redirecting to auth routes
-        if (hash === '/' || hash === '/login' || hash === '/register' || hash === '/auth') {
+        if (hash === '/' || hash === '/register' || hash === '/auth') {
           setCurrentPath('/home');
         } else {
           setCurrentPath(hash.startsWith('/') ? hash : `/${hash}`);
@@ -49,8 +49,8 @@ export const RouterProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   }, [currentPath]);
 
   const navigate = (path: string) => {
-    // Never allow auth gate
-    if (path === '/' || path === '/login' || path === '/register' || path === '/auth' || path === '/onboarding') {
+    // Never allow auth root/register, but allow onboarding and other routes
+    if (path === '/' || path === '/register' || path === '/auth') {
       path = '/home';
     }
     setHistoryStack(prev => [...prev, path]);

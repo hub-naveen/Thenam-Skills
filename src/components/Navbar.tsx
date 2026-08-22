@@ -73,22 +73,15 @@ export const Navbar: React.FC = () => {
 
   const navItems = [
     { label: 'Home', path: '/home', icon: Sparkles },
-    { label: 'Learn', path: '/learn', icon: BookOpen },
-    { label: 'Network', path: '/network', icon: Users },
-    { label: 'Projects', path: '/projects', icon: FolderGit2 },
+   { label: 'Learn', path: '/learn', icon: BookOpen },
+   // { label: 'Network', path: '/network', icon: Users },
+    //{ label: 'Projects', path: '/projects', icon: FolderGit2 },
     { label: 'Events', path: '/events', icon: Calendar },
-    { label: 'Communities', path: '/communities', icon: Layers },
-    { label: 'Talent Hub', path: '/talent', icon: Briefcase },
-    { label: 'Achievements', path: '/achievements', icon: Award },
+   // { label: 'Communities', path: '/communities', icon: Layers },
+   // { label: 'Talent Hub', path: '/talent', icon: Briefcase },
+    //{ label: 'Achievements', path: '/achievements', icon: Award },
   ];
 
-  const handleSimulateQuickAutomation = () => {
-    // Pick an uncompleted or active course
-    const targetCourse = courses.find(c => c.progress < 100) || courses[0];
-    if (targetCourse) {
-      triggerCourseCompletionAutomation(targetCourse.id);
-    }
-  };
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
@@ -159,16 +152,6 @@ export const Navbar: React.FC = () => {
           {/* Right Action Icons & Profile */}
           <div className="flex items-center gap-2 sm:gap-3">
             
-            {/* Quick Automation Simulator Demo Trigger */}
-            <button
-              id="navbar-simulate-automation-btn"
-              onClick={handleSimulateQuickAutomation}
-              title="Test the complete automated experience: Course -> Certificate -> Skill -> Profile -> Feed"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-linear-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold shadow-xs transition-all active:scale-95"
-            >
-              <Zap className="w-3.5 h-3.5" />
-              <span className="hidden xl:inline">Simulate</span> Complete Course
-            </button>
 
             {/* Messages */}
             <button
@@ -365,19 +348,21 @@ export const Navbar: React.FC = () => {
                   </div>
 
                   <div className="pt-2 mt-2 border-t border-slate-100 px-2 space-y-0.5">
-                    <button
-                      onClick={() => {
-                        setIsProfileOpen(false);
-                        navigate('/admin');
-                      }}
-                      className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors text-left"
-                    >
-                      <span className="flex items-center gap-2">
-                        <GraduationCap className="w-4 h-4 text-indigo-500" />
-                        Admin & Faculty Portal
-                      </span>
-                      <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-1.5 py-0.5 rounded">Console</span>
-                    </button>
+                    {(currentUser.role === 'admin' || currentUser.role === 'faculty') && (
+                      <button
+                        onClick={() => {
+                          setIsProfileOpen(false);
+                          navigate('/admin');
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors text-left"
+                      >
+                        <span className="flex items-center gap-2">
+                          <GraduationCap className="w-4 h-4 text-indigo-500" />
+                          Admin & Faculty Portal
+                        </span>
+                        <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-1.5 py-0.5 rounded">Console</span>
+                      </button>
+                    )}
                     
                     <button
                       onClick={() => {
@@ -441,18 +426,6 @@ export const Navbar: React.FC = () => {
               })}
             </div>
 
-            <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
-              <button
-                onClick={() => {
-                  handleSimulateQuickAutomation();
-                  setIsMobileMenuOpen(false);
-                }}
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-amber-500 text-white text-xs font-bold shadow-xs"
-              >
-                <Zap className="w-4 h-4" />
-                Simulate Course Completion & Certificate
-              </button>
-            </div>
           </div>
         )}
       </div>
