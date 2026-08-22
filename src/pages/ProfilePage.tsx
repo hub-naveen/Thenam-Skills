@@ -34,10 +34,11 @@ import { useEffect } from 'react';
 import { ConnectModal } from '../components/ConnectModal';
 import { SkillSelector } from '../components/SkillSelector';
 import { StudentProfileForm } from '../components/StudentProfileForm';
+import { LearningActivityCard } from '../components/LearningActivityCard';
 import { uploadProfileImage } from '../firebase/storage';
 
 export const ProfilePage: React.FC = () => {
-  const { currentUser, updateCurrentUser, addSkillToProfile, removeSkillFromProfile, certificates, projects, showToast } = useApp();
+  const { currentUser, updateCurrentUser, addSkillToProfile, removeSkillFromProfile, certificates, projects, activities, showToast } = useApp();
   const { currentPath, navigate } = useRouter();
   const { refreshProfile } = useAuth();
 
@@ -391,7 +392,7 @@ export const ProfilePage: React.FC = () => {
           }`}
         >
           <Sparkles className="w-4 h-4" />
-          <span>Automated Learning Timeline</span>
+          <span>My Activity & Posts</span>
         </button>
 
         <button
@@ -431,61 +432,30 @@ export const ProfilePage: React.FC = () => {
         </button>
       </div>
 
-      {/* TAB CONTENT: Learning Journey Timeline */}
+      {/* TAB CONTENT: My Activity & Posts */}
       {activeTab === 'journey' && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6">
+        <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-bold text-slate-900">Verified Academic & Learning Milestones</h3>
+              <h3 className="text-base font-bold text-slate-900">Activity & Published Posts</h3>
               <p className="text-xs text-slate-500 mt-0.5">
-                Automatically logged milestones triggered upon verified course completion, workshop attendance, and project deployments.
+                Your shared learning milestones, projects, and custom posts.
               </p>
             </div>
-            <span className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Tamper-Proof Audit
-            </span>
           </div>
 
-          {/* Timeline Visual */}
-          <div className="relative pl-6 sm:pl-8 border-l-2 border-indigo-100 space-y-8 mt-6">
-            {(profile.journey && profile.journey.length > 0 ? profile.journey : []).map((milestone, idx) => (
-              <div key={milestone.id || idx} className="relative group">
-                {/* Bullet */}
-                <div className="absolute -left-[31px] sm:-left-[39px] top-1 w-6 h-6 rounded-full bg-white border-2 border-indigo-600 flex items-center justify-center shadow-xs">
-                  <span className="w-2 h-2 rounded-full bg-indigo-600" />
-                </div>
-
-                <div className="bg-slate-50 hover:bg-indigo-50/40 p-4 sm:p-5 rounded-2xl border border-slate-200/80 transition-colors space-y-2">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                    <span className="text-[11px] font-extrabold uppercase tracking-wider text-indigo-600">
-                      {milestone.date}
-                    </span>
-                    {milestone.verified && (
-                      <span className="inline-flex items-center gap-1 text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md self-start sm:self-auto">
-                        <CheckCircle2 className="w-3 h-3" />
-                        Verified Milestone
-                      </span>
-                    )}
-                  </div>
-
-                  <h4 className="text-sm font-bold text-slate-900">{milestone.title}</h4>
-                  <p className="text-xs text-slate-600">{milestone.description}</p>
-
-                  {milestone.certificateId && (
-                    <div className="pt-2">
-                      <button
-                        onClick={() => navigate(`/certificate/${milestone.certificateId}`)}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-850 cursor-pointer"
-                      >
-                        <span>View Verified Certificate</span>
-                        <ArrowRight className="w-3 h-3" />
-                      </button>
-                    </div>
-                  )}
-                </div>
+          <div className="space-y-6">
+            {activities
+              .filter(act => act.author.id === profile.id)
+              .sort((a, b) => new Date(b.createdAt || b.timestamp).getTime() - new Date(a.createdAt || a.timestamp).getTime())
+              .map(act => (
+                <LearningActivityCard key={act.id} activity={act} />
+              ))}
+            {activities.filter(act => act.author.id === profile.id).length === 0 && (
+              <div className="bg-white rounded-3xl border border-slate-200 p-8 text-center text-slate-500 text-sm">
+                No activity posts published yet.
               </div>
-            ))}
+            )}
           </div>
         </div>
       )}

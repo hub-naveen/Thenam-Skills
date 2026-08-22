@@ -157,28 +157,18 @@ const AppContent: React.FC = () => {
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 mt-auto py-8 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
-              <ShieldCheck className="w-3.5 h-3.5" />
-            </div>
-            <span className="font-extrabold text-slate-800">THENAM SKILLS</span>
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+            <img src="/logo.jpg" alt="THENAM CAMPUS Logo" className="w-6 h-6 rounded-lg object-cover" />
+            <span className="font-extrabold text-slate-800">THENAM CAMPUS</span>
             <span>•</span>
             <span>Verified Student Credentialing & Talent Network</span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-600">
-            <button onClick={() => navigate('/home')} className="hover:text-indigo-600 transition-colors">Feed</button>
-            <button onClick={() => navigate('/learn')} className="hover:text-indigo-600 transition-colors">Courses</button>
-            <button onClick={() => navigate('/certificates')} className="hover:text-indigo-600 transition-colors">Certificates</button>
-            <button onClick={() => navigate('/projects')} className="hover:text-indigo-600 transition-colors">Projects</button>
-            <button onClick={() => navigate('/talent')} className="hover:text-indigo-600 transition-colors">Talent Hub</button>
+          <div className="flex items-center gap-4 text-[11px] text-slate-400">
             {(currentUserProfile?.role === 'admin' || currentUserProfile?.role === 'faculty') && (
-              <button onClick={() => navigate('/admin')} className="hover:text-indigo-600 transition-colors">Faculty Portal</button>
+              <button onClick={() => navigate('/admin')} className="font-semibold text-slate-600 hover:text-indigo-600 transition-colors text-xs">Faculty Portal</button>
             )}
-          </div>
-
-          <div className="text-[11px] text-slate-400">
-            © {new Date().getFullYear()} THENAM Academic Board. All rights reserved.
+            <span>© {new Date().getFullYear()} THENAM Academic Board. All rights reserved.</span>
           </div>
         </div>
       </footer>

@@ -222,6 +222,7 @@ export interface ActivityItem {
     grade?: string;
     verificationHash?: string;
     imageUrl?: string;
+    imageUrls?: string[];
     metrics?: string;
   };
   likesCount: number;
@@ -231,6 +232,7 @@ export interface ActivityItem {
   sharesCount: number;
   isSaved?: boolean;
   isArchived?: boolean;
+  createdAt?: string | any;
 }
 
 export interface NetworkConnection {

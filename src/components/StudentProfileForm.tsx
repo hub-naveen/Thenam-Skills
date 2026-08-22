@@ -423,7 +423,7 @@ export const StudentProfileForm: React.FC<StudentProfileFormProps> = ({
             Select Technical Skills <span className="text-rose-500">*</span>
           </label>
           <p className="text-[11px] text-slate-500 leading-normal mt-0.5">
-            Add skills you already master. Skills associated with certifications you complete on THENAM Skills are automatically tagged as verified.
+            Add skills you already master. Skills associated with certifications you complete on Thenam Campus are automatically tagged as verified.
           </p>
         </div>
         

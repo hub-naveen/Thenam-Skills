@@ -115,12 +115,14 @@ export const CertificateViewer: React.FC<CertificateViewerProps> = ({ certificat
         {/* Certificate Header */}
         <div className="text-center space-y-3 relative z-10">
           <div className="flex items-center justify-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-900 text-amber-400 flex items-center justify-center shadow-lg border border-amber-500/40">
-              <Award className="w-7 h-7" />
-            </div>
+            <img 
+              src="/logo.jpg" 
+              alt="Thenam Campus Logo" 
+              className="w-12 h-12 rounded-2xl object-cover shadow-lg border border-amber-500/40"
+            />
             <div className="text-left">
               <h2 className="text-lg font-black tracking-tight text-slate-900 leading-tight">
-                THENAM <span className="text-indigo-600">SKILLS</span> ACADEMY
+                Thenam <span className="text-indigo-600">Campus</span>
               </h2>
               <p className="text-[10px] font-bold text-amber-800 uppercase tracking-widest">
                 Academic Certification & Competency Board
