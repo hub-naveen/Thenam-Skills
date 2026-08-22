@@ -296,7 +296,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             sharesCount: act.sharesCount || 0,
             comments: act.comments || [],
             isLiked: false,
-            isSaved: false
+            isSaved: false,
+            createdAt: act.createdAt
           }));
           
           // Combine with mock activities so mock posts are still visible
@@ -502,7 +503,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         sharesCount: act.sharesCount || 0,
         comments: act.comments || [],
         isLiked: false,
-        isSaved: false
+        isSaved: false,
+        createdAt: act.createdAt
       }));
       setActivities(prev => {
         const newActs = [...backendActs];
@@ -569,6 +571,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         ...activityData,
         id: `act_${Date.now()}`,
         timestamp: 'Just now',
+        createdAt: new Date().toISOString(),
         likesCount: 0,
         isLiked: false,
         commentsCount: 0,

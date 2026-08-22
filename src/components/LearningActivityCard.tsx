@@ -25,6 +25,8 @@ import { ActivityItem } from '../types';
 import { useApp } from '../context/AppContext';
 import { useRouter } from '../context/RouterContext';
 
+import { getRelativeTime } from '../utils/time';
+
 interface LearningActivityCardProps {
   activity: ActivityItem;
 }
@@ -148,9 +150,10 @@ export const LearningActivityCard: React.FC<LearningActivityCardProps> = ({ acti
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-medium text-slate-400">{activity.timestamp}</span>
-          
+        <div className="flex items-center gap-3">
+          <span className="text-[11px] text-slate-400 font-medium whitespace-nowrap">
+            {getRelativeTime(activity.createdAt || activity.timestamp)}
+          </span>
           {isAuthor && (
             <div className="relative">
               <button

@@ -232,6 +232,7 @@ export interface ActivityItem {
   sharesCount: number;
   isSaved?: boolean;
   isArchived?: boolean;
+  createdAt?: string | any;
 }
 
 export interface NetworkConnection {
