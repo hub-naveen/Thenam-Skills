@@ -22,38 +22,61 @@ import {
   Edit3,
   Flame,
   Zap,
-  ArrowRight
+  ArrowRight,
+  X
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useRouter } from '../context/RouterContext';
-import { DEMO_USER, OTHER_STUDENTS } from '../mock/students';
+import { useAuth } from '../context/AuthContext';
 import { StudentProfile } from '../types';
+import { api } from '../services/api';
+import { useEffect } from 'react';
+import { ConnectModal } from '../components/ConnectModal';
+import { SkillSelector } from '../components/SkillSelector';
+import { StudentProfileForm } from '../components/StudentProfileForm';
+import { uploadProfileImage } from '../firebase/storage';
 
 export const ProfilePage: React.FC = () => {
   const { currentUser, updateCurrentUser, addSkillToProfile, removeSkillFromProfile, certificates, projects, showToast } = useApp();
   const { currentPath, navigate } = useRouter();
+  const { refreshProfile } = useAuth();
 
   // Determine if viewing own profile or other student's profile
   const pathParts = currentPath.split('/');
   const profileId = pathParts[2]; // e.g. /profile/usr_naveen_01
 
   const isOwnProfile = !profileId || profileId === currentUser.id;
-  const profile: StudentProfile = isOwnProfile
-    ? currentUser
-    : OTHER_STUDENTS.find(s => s.id === profileId) || currentUser;
+  
+  const [publicProfile, setPublicProfile] = useState<StudentProfile | null>(null);
+
+  useEffect(() => {
+    if (!isOwnProfile && profileId) {
+      api.get(`/profile/${profileId}`)
+        .then(res => setPublicProfile(res.data))
+        .catch(err => console.error('Failed to load public portfolio via API:', err));
+    } else {
+      setPublicProfile(null);
+    }
+  }, [isOwnProfile, profileId]);
+
+  const profile = isOwnProfile ? currentUser : (publicProfile || currentUser);
 
   const [activeTab, setActiveTab] = useState<'journey' | 'certificates' | 'projects' | 'skills'>('journey');
-  const [newSkillInput, setNewSkillInput] = useState('');
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [editedBio, setEditedBio] = useState(profile.bio);
 
-  const handleAddSkill = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newSkillInput.trim()) {
-      addSkillToProfile(newSkillInput.trim());
-      setNewSkillInput('');
-    }
-  };
+  // Sync edited bio if profile changes
+  useEffect(() => {
+    setEditedBio(profile.bio);
+  }, [profile.bio]);
+
+  // Modal control states
+  const [isSocialModalOpen, setIsSocialModalOpen] = useState(false);
+  const [socialModalType, setSocialModalType] = useState<'linkedin' | 'github'>('linkedin');
+
+  const [isSkillModalOpen, setIsSkillModalOpen] = useState(false);
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [editLoading, setEditLoading] = useState(false);
 
   const handleSaveBio = () => {
     updateCurrentUser({ bio: editedBio });
@@ -63,6 +86,53 @@ export const ProfilePage: React.FC = () => {
   const handleShareProfile = () => {
     navigator.clipboard?.writeText(window.location.href);
     showToast('Profile portfolio link copied to clipboard!');
+  };
+
+  const handleSaveSocialLink = async (url: string) => {
+    if (socialModalType === 'linkedin') {
+      await updateCurrentUser({ linkedinUrl: url });
+    } else {
+      await updateCurrentUser({ githubUrl: url });
+    }
+  };
+
+  const handleEditProfileSubmit = async (formData: any, imageFile: File | null) => {
+    setEditLoading(true);
+    try {
+      let finalAvatar = currentUser.avatar;
+      
+      // Upload new avatar if selected
+      if (imageFile) {
+        finalAvatar = await uploadProfileImage(currentUser.id, imageFile);
+      }
+
+      await updateCurrentUser({
+        name: formData.name,
+        department: formData.department,
+        yearOfStudy: formData.year,
+        college: formData.collegeName,
+        phone: formData.phoneNumber,
+        dateOfBirth: formData.dateOfBirth,
+        skills: formData.skills,
+        avatar: finalAvatar,
+        linkedinUrl: formData.linkedinURL,
+        githubUrl: formData.githubURL,
+        location: `${formData.collegeLocation.city}, ${formData.collegeLocation.state}`,
+        collegeLocation: formData.collegeLocation
+      });
+
+      setIsEditProfileOpen(false);
+    } catch (error: any) {
+      console.error('Failed to submit edited profile:', error);
+      showToast(error.message || 'Failed to update profile');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleSaveSkills = async (newSkills: string[]) => {
+    await updateCurrentUser({ skills: newSkills });
+    setIsSkillModalOpen(false);
   };
 
   return (
@@ -80,17 +150,26 @@ export const ProfilePage: React.FC = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-transparent" />
           
-          <div className="absolute top-4 right-4 flex items-center gap-2">
+          <div className="absolute top-4 right-4 flex flex-wrap items-center gap-2">
+            {isOwnProfile && (
+              <button
+                onClick={() => setIsEditProfileOpen(true)}
+                className="px-3.5 py-1.5 bg-slate-950/40 hover:bg-slate-950/60 text-white rounded-xl backdrop-blur-md text-xs font-bold border border-white/20 transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Edit Profile</span>
+              </button>
+            )}
             <button
               onClick={handleShareProfile}
-              className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md text-xs font-bold border border-white/20 transition-colors flex items-center gap-1.5"
+              className="px-3.5 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl backdrop-blur-md text-xs font-bold border border-white/20 transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <Share2 className="w-3.5 h-3.5" />
               <span>Share</span>
             </button>
             <button
               onClick={() => showToast('Student Resume (PDF) generated from verified record!')}
-              className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm"
+              className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Export CV</span>
@@ -165,13 +244,13 @@ export const ProfilePage: React.FC = () => {
                     <div className="flex justify-end gap-2">
                       <button
                         onClick={() => setIsEditingBio(false)}
-                        className="px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
+                        className="px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg cursor-pointer"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={handleSaveBio}
-                        className="px-3 py-1 text-xs font-bold text-white bg-indigo-600 rounded-lg shadow-2xs"
+                        className="px-3 py-1 text-xs font-bold text-white bg-indigo-600 rounded-lg shadow-2xs cursor-pointer"
                       >
                         Save Bio
                       </button>
@@ -185,7 +264,7 @@ export const ProfilePage: React.FC = () => {
                     {isOwnProfile && (
                       <button
                         onClick={() => setIsEditingBio(true)}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 mt-1"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800 mt-1 cursor-pointer"
                       >
                         <Edit3 className="w-3 h-3" />
                         Edit bio
@@ -197,7 +276,7 @@ export const ProfilePage: React.FC = () => {
 
               {/* Social & Contact Links */}
               <div className="flex flex-wrap items-center gap-3 pt-2">
-                {profile.githubUrl && (
+                {profile.githubUrl ? (
                   <a
                     href={profile.githubUrl}
                     target="_blank"
@@ -207,8 +286,22 @@ export const ProfilePage: React.FC = () => {
                     <Github className="w-3.5 h-3.5" />
                     <span>GitHub</span>
                   </a>
+                ) : (
+                  isOwnProfile && (
+                    <button
+                      onClick={() => {
+                        setSocialModalType('github');
+                        setIsSocialModalOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded-xl border border-rose-200 transition-colors cursor-pointer"
+                    >
+                      <Github className="w-3.5 h-3.5 animate-pulse" />
+                      <span>Connect your GitHub</span>
+                    </button>
+                  )
                 )}
-                {profile.linkedinUrl && (
+
+                {profile.linkedinUrl ? (
                   <a
                     href={profile.linkedinUrl}
                     target="_blank"
@@ -218,7 +311,21 @@ export const ProfilePage: React.FC = () => {
                     <Linkedin className="w-3.5 h-3.5" />
                     <span>LinkedIn</span>
                   </a>
+                ) : (
+                  isOwnProfile && (
+                    <button
+                      onClick={() => {
+                        setSocialModalType('linkedin');
+                        setIsSocialModalOpen(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold rounded-xl border border-rose-200 transition-colors cursor-pointer"
+                    >
+                      <Linkedin className="w-3.5 h-3.5 animate-pulse" />
+                      <span>Connect your LinkedIn</span>
+                    </button>
+                  )
                 )}
+
                 {profile.email && (
                   <a
                     href={`mailto:${profile.email}`}
@@ -277,7 +384,7 @@ export const ProfilePage: React.FC = () => {
       <div className="flex items-center gap-2 border-b border-slate-200 pb-1 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab('journey')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 cursor-pointer ${
             activeTab === 'journey'
               ? 'bg-indigo-600 text-white shadow-xs'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -289,7 +396,7 @@ export const ProfilePage: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('certificates')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 cursor-pointer ${
             activeTab === 'certificates'
               ? 'bg-indigo-600 text-white shadow-xs'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -301,7 +408,7 @@ export const ProfilePage: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('projects')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 cursor-pointer ${
             activeTab === 'projects'
               ? 'bg-indigo-600 text-white shadow-xs'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -313,7 +420,7 @@ export const ProfilePage: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('skills')}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 cursor-pointer ${
             activeTab === 'skills'
               ? 'bg-indigo-600 text-white shadow-xs'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -369,7 +476,7 @@ export const ProfilePage: React.FC = () => {
                     <div className="pt-2">
                       <button
                         onClick={() => navigate(`/certificate/${milestone.certificateId}`)}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800"
+                        className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-850 cursor-pointer"
                       >
                         <span>View Verified Certificate</span>
                         <ArrowRight className="w-3 h-3" />
@@ -386,7 +493,7 @@ export const ProfilePage: React.FC = () => {
       {/* TAB CONTENT: Verified Certificates */}
       {activeTab === 'certificates' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {(isOwnProfile ? certificates : []).map((cert) => (
+          {(isOwnProfile ? certificates : (profile.certificates || [])).map((cert) => (
             <div
               key={cert.id}
               className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
@@ -422,7 +529,7 @@ export const ProfilePage: React.FC = () => {
               <div className="mt-5 pt-3 border-t border-slate-100 flex items-center gap-2">
                 <button
                   onClick={() => navigate(`/certificate/${cert.id}`)}
-                  className="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-2xs"
+                  className="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-750 text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer"
                 >
                   <span>View High-Res Certificate</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -436,7 +543,7 @@ export const ProfilePage: React.FC = () => {
       {/* TAB CONTENT: Projects */}
       {activeTab === 'projects' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {(isOwnProfile ? projects : []).map((proj) => (
+          {(isOwnProfile ? projects : (profile.projects || [])).map((proj) => (
             <div
               key={proj.id}
               className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
@@ -501,23 +608,16 @@ export const ProfilePage: React.FC = () => {
               </p>
             </div>
 
-            {/* Quick Skill Add (for user's own profile) */}
+            {/* Quick Skill Add (opens SkillSelector Modal) */}
             {isOwnProfile && (
-              <form onSubmit={handleAddSkill} className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Add skill (e.g. Next.js)..."
-                  value={newSkillInput}
-                  onChange={(e) => setNewSkillInput(e.target.value)}
-                  className="px-3 py-1.5 bg-slate-50 text-xs text-slate-800 rounded-xl border border-slate-200 focus:bg-white focus:border-indigo-500 outline-hidden"
-                />
-                <button
-                  type="submit"
-                  className="p-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-2xs transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </form>
+              <button
+                type="button"
+                onClick={() => setIsSkillModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-750 text-white text-xs font-bold rounded-xl shadow-2xs transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add / Manage Skills</span>
+              </button>
             )}
           </div>
 
@@ -543,7 +643,7 @@ export const ProfilePage: React.FC = () => {
                 {isOwnProfile && (
                   <button
                     onClick={() => removeSkillFromProfile(skill)}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-600 transition-opacity"
+                    className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-600 transition-opacity cursor-pointer"
                     title="Remove skill"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -551,6 +651,81 @@ export const ProfilePage: React.FC = () => {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Social Portal Connection Modals */}
+      <ConnectModal
+        isOpen={isSocialModalOpen}
+        onClose={() => setIsSocialModalOpen(false)}
+        type={socialModalType}
+        initialValue={socialModalType === 'linkedin' ? (currentUser.linkedinUrl || '') : (currentUser.githubUrl || '')}
+        onSave={handleSaveSocialLink}
+      />
+
+      {/* Skills Showcase Selector Modal */}
+      {isSkillModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs" onClick={() => setIsSkillModalOpen(false)} />
+          <div className="bg-white rounded-3xl border border-slate-200 w-full max-w-2xl shadow-2xl relative z-10 overflow-hidden p-6 space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-base font-black text-slate-900">Manage Portfolio Skills</h3>
+              <button onClick={() => setIsSkillModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            
+            <SkillSelector
+              selectedSkills={currentUser.skills}
+              onChange={handleSaveSkills}
+              maxSkills={15}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Edit Profile Fullscreen Modal */}
+      {isEditProfileOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-100/70 backdrop-blur-xs py-8 px-4 flex items-center justify-center">
+          <div className="fixed inset-0" onClick={() => setIsEditProfileOpen(false)} />
+          <div className="bg-white rounded-3xl border border-slate-200 w-full max-w-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[90vh]">
+            
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Edit Student Credentials</h3>
+                <p className="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Modify Database Record</p>
+              </div>
+              <button 
+                onClick={() => setIsEditProfileOpen(false)}
+                className="p-1.5 hover:bg-slate-200 rounded-lg text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Scrollable Form */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <StudentProfileForm
+                initialData={{
+                  name: currentUser.name,
+                  department: currentUser.department,
+                  yearOfStudy: currentUser.yearOfStudy,
+                  college: currentUser.college,
+                  phone: currentUser.phone,
+                  dateOfBirth: currentUser.dateOfBirth,
+                  skills: currentUser.skills,
+                  avatar: currentUser.avatar,
+                  linkedinUrl: currentUser.linkedinUrl || '',
+                  githubUrl: currentUser.githubUrl || '',
+                  collegeLocation: currentUser.collegeLocation
+                }}
+                onSubmit={handleEditProfileSubmit}
+                submitLabel="Apply Changes"
+                loading={editLoading}
+              />
+            </div>
           </div>
         </div>
       )}

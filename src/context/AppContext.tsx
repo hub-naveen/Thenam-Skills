@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import confetti from 'canvas-confetti';
 import {
   StudentProfile,
@@ -24,6 +24,8 @@ import { INITIAL_CONNECTIONS } from '../mock/connections';
 import { INITIAL_NOTIFICATIONS } from '../mock/notifications';
 import { INITIAL_CONVERSATIONS } from '../mock/messages';
 import { INITIAL_COMMUNITIES } from '../mock/communities';
+import { useAuth } from './AuthContext';
+import { api } from '../services/api';
 
 interface AutomationPayload {
   title: string;
@@ -46,7 +48,7 @@ interface AppContextType {
   completeCourseModule: (courseId: string, moduleId: string) => void;
   
   // Automated Experience Pipeline
-  triggerCourseCompletionAutomation: (courseId: string) => Certificate | null;
+  triggerCourseCompletionAutomation: (courseId: string) => Promise<Certificate | null>;
   activeAutomationModal: AutomationPayload | null;
   closeAutomationModal: () => void;
   
@@ -118,10 +120,45 @@ const DEFAULT_SETTINGS: AppSettings = {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<StudentProfile>(() => {
-    const saved = localStorage.getItem('thenam_user');
-    return saved ? JSON.parse(saved) : DEMO_USER;
-  });
+  const { currentUserProfile, refreshProfile } = useAuth();
+
+  const currentUser = useMemo<StudentProfile>(() => {
+    if (!currentUserProfile) return DEMO_USER;
+    return {
+      id: currentUserProfile.uid || currentUserProfile.id || '',
+      name: currentUserProfile.name || '',
+      headline: currentUserProfile.headline || `${currentUserProfile.year || 'Student'} - ${currentUserProfile.department || 'Engineering'}`,
+      college: currentUserProfile.collegeName || currentUserProfile.college || 'DMI College of Engineering',
+      department: currentUserProfile.department || '',
+      yearOfStudy: currentUserProfile.year || currentUserProfile.yearOfStudy || '',
+      location: currentUserProfile.collegeLocation 
+        ? `${currentUserProfile.collegeLocation.city}, ${currentUserProfile.collegeLocation.state}` 
+        : currentUserProfile.location || 'Chennai, India',
+      avatar: currentUserProfile.photoURL || currentUserProfile.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
+      coverImage: currentUserProfile.coverImage || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80',
+      bio: currentUserProfile.bio || 'THENAM student building professional identity.',
+      email: currentUserProfile.email || '',
+      phone: currentUserProfile.phoneNumber || currentUserProfile.phone || '',
+      githubUrl: currentUserProfile.githubURL || currentUserProfile.githubUrl || '',
+      linkedinUrl: currentUserProfile.linkedinURL || currentUserProfile.linkedinUrl || '',
+      skills: currentUserProfile.skills || [],
+      interests: currentUserProfile.interests || [],
+      metrics: currentUserProfile.metrics || {
+        coursesCompleted: 0,
+        certificatesCount: 0,
+        projectsCount: 0,
+        networkCount: 0,
+        xpPoints: 0,
+        streakDays: 0,
+        globalRank: 100
+      },
+      journey: currentUserProfile.journey || [],
+      profileCompleted: currentUserProfile.profileCompleted || false,
+      role: currentUserProfile.role || 'student',
+      dateOfBirth: currentUserProfile.dateOfBirth || '',
+      collegeLocation: currentUserProfile.collegeLocation || { city: '', state: '', country: '' }
+    };
+  }, [currentUserProfile]);
 
   const [courses, setCourses] = useState<Course[]>(() => {
     const saved = localStorage.getItem('thenam_courses');
@@ -178,52 +215,87 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Sync to LocalStorage
+  // Sync to LocalStorage (Student identity is now loaded from Firestore, skipping write)
+
+  // Load data from the backend
   useEffect(() => {
-    localStorage.setItem('thenam_user', JSON.stringify(currentUser));
-    if (currentUser.id && currentUser.id !== 'usr_naveen_01') {
-      localStorage.setItem(`thenam_user_${currentUser.id}`, JSON.stringify(currentUser));
+    if (currentUserProfile) {
+      api.get('/courses')
+        .then(res => {
+          const backendCourses = res.data.map((c: any) => ({
+            ...c,
+            id: c._id,
+            skillsGained: c.skills.map((s: any) => s.name || s),
+          }));
+          setCourses(backendCourses);
+        })
+        .catch(err => console.error('Failed to load courses from API:', err));
+
+      api.get('/certificates/me')
+        .then(res => {
+          const backendCerts = res.data.map((cert: any) => ({
+            ...cert,
+            id: cert._id,
+            courseName: cert.course?.title || cert.title,
+            recipientName: currentUser.name,
+            issueDate: new Date(cert.issuedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+            skills: (cert.course?.skills || []).map((s: any) => s.name || s)
+          }));
+          setCertificates(backendCerts);
+        })
+        .catch(err => console.error('Failed to load certificates from API:', err));
+
+      api.get('/projects/me')
+        .then(res => {
+          const backendProjects = res.data.map((p: any) => ({
+            ...p,
+            id: p._id,
+            techStack: p.technologies.map((s: any) => s.name || s),
+            coverImage: p.imageURL || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80',
+            githubUrl: p.githubURL,
+            demoUrl: p.liveURL
+          }));
+          setProjects(backendProjects);
+        })
+        .catch(err => console.error('Failed to load projects from API:', err));
+
+      api.get('/notifications')
+        .then(res => {
+          const backendNotifs = res.data.map((n: any) => ({
+            id: n._id,
+            type: n.type,
+            title: n.title,
+            message: n.message,
+            timestamp: new Date(n.createdAt).toLocaleDateString(),
+            isRead: n.read
+          }));
+          setNotifications(backendNotifs);
+        })
+        .catch(err => console.error('Failed to load notifications from API:', err));
+
+      api.get('/activities')
+        .then(res => {
+          const backendActs = res.data.map((act: any) => ({
+            id: act._id,
+            type: act.type,
+            title: act.title,
+            description: act.description,
+            timestamp: new Date(act.createdAt).toLocaleDateString(),
+            author: {
+              id: act.user?.firebaseUid || '',
+              name: act.user?.name || 'Student',
+              avatar: act.user?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
+              headline: `${act.user?.year || 'Student'} - ${act.user?.department || 'Engineering'}`,
+              college: act.user?.collegeName || 'DMI College of Engineering'
+            },
+            likesCount: act.metadata?.likesCount || 0,
+            commentsCount: act.metadata?.commentsCount || 0
+          }));
+          setActivities(backendActs);
+        })
+        .catch(err => console.error('Failed to load activities from API:', err));
     }
-  }, [currentUser]);
-
-  useEffect(() => {
-    localStorage.setItem('thenam_courses', JSON.stringify(courses));
-  }, [courses]);
-
-  useEffect(() => {
-    localStorage.setItem('thenam_certificates', JSON.stringify(certificates));
-  }, [certificates]);
-
-  useEffect(() => {
-    localStorage.setItem('thenam_activities', JSON.stringify(activities));
-  }, [activities]);
-
-  useEffect(() => {
-    localStorage.setItem('thenam_projects', JSON.stringify(projects));
-  }, [projects]);
-
-  useEffect(() => {
-    localStorage.setItem('thenam_events', JSON.stringify(events));
-  }, [events]);
-
-  useEffect(() => {
-    localStorage.setItem('thenam_connections', JSON.stringify(connections));
-  }, [connections]);
-
-  useEffect(() => {
-    localStorage.setItem('thenam_notifications', JSON.stringify(notifications));
-  }, [notifications]);
-
-  useEffect(() => {
-    localStorage.setItem('thenam_conversations', JSON.stringify(conversations));
-  }, [conversations]);
-
-  useEffect(() => {
-    localStorage.setItem('thenam_communities', JSON.stringify(communities));
-  }, [communities]);
-
-  useEffect(() => {
-    localStorage.setItem('thenam_settings', JSON.stringify(settings));
-  }, [settings]);
+  }, [currentUserProfile, currentUser.name]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -232,39 +304,96 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }, 4000);
   };
 
-  const updateCurrentUser = (updated: Partial<StudentProfile>) => {
-    setCurrentUser(prev => ({ ...prev, ...updated }));
-    showToast('Profile updated successfully');
-  };
+  const updateCurrentUser = async (updated: Partial<StudentProfile>) => {
+    if (!currentUserProfile) return;
+    try {
+      const dbUpdates: any = {};
+      if (updated.name) dbUpdates.name = updated.name;
+      if (updated.department) dbUpdates.department = updated.department;
+      if (updated.yearOfStudy) dbUpdates.year = updated.yearOfStudy;
+      if (updated.college) dbUpdates.collegeName = updated.college;
+      if (updated.phone) dbUpdates.phoneNumber = updated.phone;
+      if (updated.avatar) dbUpdates.photoURL = updated.avatar;
+      if (updated.linkedinUrl !== undefined) dbUpdates.linkedinURL = updated.linkedinUrl || null;
+      if (updated.githubUrl !== undefined) dbUpdates.githubURL = updated.githubUrl || null;
+      if (updated.location) {
+        const parts = updated.location.split(',');
+        dbUpdates.collegeLocation = {
+          city: parts[0]?.trim() || '',
+          state: parts[1]?.trim() || '',
+          country: parts[2]?.trim() || 'India'
+        };
+      }
 
-  const addSkillToProfile = (skill: string) => {
-    const trimmed = skill.trim();
-    if (!trimmed) return;
-    if (!currentUser.skills.includes(trimmed)) {
-      setCurrentUser(prev => ({
-        ...prev,
-        skills: [...prev.skills, trimmed]
-      }));
-      showToast(`Skill "${trimmed}" added to your profile`);
+      await api.put('/profile/me', dbUpdates);
+      await refreshProfile();
+      showToast('Profile updated successfully');
+    } catch (error) {
+      console.error('Failed to update user profile via API:', error);
+      showToast('Error saving profile modifications');
     }
   };
 
-  const removeSkillFromProfile = (skill: string) => {
-    setCurrentUser(prev => ({
-      ...prev,
-      skills: prev.skills.filter(s => s !== skill)
-    }));
+  const addSkillToProfile = async (skillName: string) => {
+    if (!skillName.trim() || !currentUserProfile) return;
+    try {
+      const res = await api.get(`/skills?search=${encodeURIComponent(skillName.trim())}`);
+      const found = res.data?.[0];
+      if (!found) {
+        showToast(`Skill "${skillName}" not found in skills catalog.`);
+        return;
+      }
+      
+      const currentSkills = currentUserProfile.skills || [];
+      const currentIds = currentSkills.map((s: any) => s._id || s);
+      
+      if (!currentIds.includes(found._id)) {
+        const newSkills = [...currentIds, found._id];
+        await api.put('/profile/me', { skills: newSkills });
+        await refreshProfile();
+        showToast(`Skill "${found.name}" added to profile`);
+      }
+    } catch (error) {
+      console.error('Error adding skill:', error);
+    }
+  };
+
+  const removeSkillFromProfile = async (skillName: string) => {
+    if (!currentUserProfile) return;
+    try {
+      const currentSkills = currentUserProfile.skills || [];
+      const newSkills = currentSkills
+        .filter((s: any) => {
+          const name = s.name || s;
+          return name.toLowerCase() !== skillName.toLowerCase();
+        })
+        .map((s: any) => s._id || s);
+
+      await api.put('/profile/me', { skills: newSkills });
+      await refreshProfile();
+      showToast(`Skill "${skillName}" removed`);
+    } catch (error) {
+      console.error('Error removing skill:', error);
+    }
   };
 
   // Course actions
-  const enrollInCourse = (courseId: string) => {
-    setCourses(prev => prev.map(c => {
-      if (c.id === courseId) {
-        return { ...c, isEnrolled: true, progress: c.progress || 10 };
-      }
-      return c;
-    }));
-    showToast('Enrolled in course! Happy learning.');
+  const enrollInCourse = async (courseId: string) => {
+    try {
+      await api.post(`/courses/${courseId}/enroll`);
+      const res = await api.get('/courses');
+      const backendCourses = res.data.map((c: any) => ({
+        ...c,
+        id: c._id,
+        skillsGained: c.skills.map((s: any) => s.name || s),
+      }));
+      setCourses(backendCourses);
+      await refreshProfile();
+      showToast('Enrolled in course successfully!');
+    } catch (err: any) {
+      console.error(err);
+      showToast(err.message || 'Failed to enroll');
+    }
   };
 
   const toggleCourseBookmark = (courseId: string) => {
@@ -278,170 +407,129 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }));
   };
 
-  const completeCourseModule = (courseId: string, moduleId: string) => {
-    setCourses(prev => prev.map(c => {
-      if (c.id === courseId) {
-        const updatedModules = c.modules.map(m => m.id === moduleId ? { ...m, isCompleted: true } : m);
-        const completedCount = updatedModules.filter(m => m.isCompleted).length;
-        const newProgress = Math.round((completedCount / updatedModules.length) * 100);
-        return {
-          ...c,
-          modules: updatedModules,
-          completedModules: completedCount,
-          progress: newProgress
-        };
-      }
-      return c;
-    }));
+  const completeCourseModule = async (courseId: string, moduleId: string) => {
+    const course = courses.find(c => c.id === courseId);
+    if (!course) return;
+
+    const total = course.totalModules || 5;
+    const completed = (course.completedModules || 0) + 1;
+    const nextProgress = Math.min(100, Math.round((completed / total) * 100));
+
+    try {
+      await api.put(`/courses/${courseId}/progress`, { progress: nextProgress });
+      const res = await api.get('/courses');
+      const backendCourses = res.data.map((c: any) => ({
+        ...c,
+        id: c._id,
+        skillsGained: c.skills.map((s: any) => s.name || s),
+      }));
+      setCourses(backendCourses);
+      await refreshProfile();
+    } catch (e) {
+      console.error('Failed to update module progress:', e);
+    }
   };
 
   // THE AUTOMATED EXPERIENCE PIPELINE
-  const triggerCourseCompletionAutomation = (courseId: string): Certificate | null => {
-    const course = courses.find(c => c.id === courseId);
-    if (!course) return null;
+  const triggerCourseCompletionAutomation = async (courseId: string): Promise<Certificate | null> => {
+    try {
+      const res = await api.post(`/courses/${courseId}/complete`);
+      const { enrollment, certificate, xpGained, skillsAdded } = res.data;
 
-    // 1. Mark course 100% complete
-    setCourses(prev => prev.map(c => {
-      if (c.id === courseId) {
-        return {
-          ...c,
-          progress: 100,
-          completedModules: c.totalModules,
-          isEnrolled: true,
-          modules: c.modules.map(m => ({ ...m, isCompleted: true }))
-        };
-      }
-      return c;
-    }));
+      // Update states from backend
+      const coursesRes = await api.get('/courses');
+      const backendCourses = coursesRes.data.map((c: any) => ({
+        ...c,
+        id: c._id,
+        skillsGained: c.skills.map((s: any) => s.name || s),
+      }));
+      setCourses(backendCourses);
 
-    // 2. Generate new Verified Certificate
-    const randomHex = Math.random().toString(16).substring(2, 10).toUpperCase();
-    const hash = `0x${Array.from({length: 40}, () => Math.floor(Math.random()*16).toString(16)).join('').toUpperCase()}`;
-    const certId = `cert_${course.domain}_${Date.now().toString().slice(-4)}`;
-    const credId = `THNM-2026-${course.category.slice(0, 2).toUpperCase()}-${randomHex}`;
+      const certsRes = await api.get('/certificates/me');
+      const backendCerts = certsRes.data.map((cert: any) => ({
+        ...cert,
+        id: cert._id,
+        courseName: cert.course?.title || cert.title,
+        recipientName: currentUser.name,
+        issueDate: new Date(cert.issuedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+        skills: (cert.course?.skills || []).map((s: any) => s.name || s)
+      }));
+      setCertificates(backendCerts);
 
-    const newCertificate: Certificate = {
-      id: certId,
-      title: `${course.title} Mastery Certificate`,
-      recipientName: currentUser.name,
-      recipientUid: currentUser.id,
-      courseId: course.id,
-      courseName: course.title,
-      issueDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-      credentialId: credId,
-      verificationHash: hash,
-      verifiedBy: 'THENAM Academic Certification Board & DMI College of Engineering',
-      grade: 'Distinction (98.5% Score)',
-      skills: course.skillsGained,
-      qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https://thenamskills.edu/verify/${credId}`,
-      issuerLogo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=100&auto=format&fit=crop&q=80',
-      certificateType: 'Course Mastery',
-      isVerified: true
-    };
+      const notifsRes = await api.get('/notifications');
+      const backendNotifs = notifsRes.data.map((n: any) => ({
+        id: n._id,
+        type: n.type,
+        title: n.title,
+        message: n.message,
+        timestamp: new Date(n.createdAt).toLocaleDateString(),
+        isRead: n.read
+      }));
+      setNotifications(backendNotifs);
 
-    setCertificates(prev => [newCertificate, ...prev]);
-
-    // 3. Add new skills to student profile
-    const newlyAddedSkills = course.skillsGained.filter(s => !currentUser.skills.includes(s));
-    
-    // 4. Update student metrics and journey
-    const newMilestone = {
-      id: `mj_${Date.now()}`,
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      type: 'certificate_earned' as ActivityType,
-      title: `${course.title} Masterclass`,
-      subtitle: `Verified by THENAM Skills (${credId})`,
-      description: `Completed all modules and passed final capstone assessment with distinction score.`,
-      verified: true,
-      certificateId: newCertificate.id,
-      courseId: course.id
-    };
-
-    setCurrentUser(prev => ({
-      ...prev,
-      skills: Array.from(new Set([...prev.skills, ...course.skillsGained])),
-      metrics: {
-        ...prev.metrics,
-        coursesCompleted: prev.metrics.coursesCompleted + 1,
-        certificatesCount: prev.metrics.certificatesCount + 1,
-        xpPoints: prev.metrics.xpPoints + 450,
-        streakDays: prev.metrics.streakDays + 1
-      },
-      journey: [newMilestone, ...prev.journey]
-    }));
-
-    // 5. Automated Learning Activity Card in Feed (if enabled in settings)
-    if (settings.autoCreateAchievementActivity) {
-      const automatedActivity: ActivityItem = {
-        id: `act_${Date.now()}`,
-        type: 'certificate_earned',
+      const actsRes = await api.get('/activities');
+      const backendActs = actsRes.data.map((act: any) => ({
+        id: act._id,
+        type: act.type,
+        title: act.title,
+        description: act.description,
+        timestamp: new Date(act.createdAt).toLocaleDateString(),
         author: {
-          id: currentUser.id,
-          name: currentUser.name,
-          headline: currentUser.headline,
-          avatar: currentUser.avatar,
-          college: currentUser.college
+          id: act.user?.firebaseUid || '',
+          name: act.user?.name || 'Student',
+          avatar: act.user?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
+          headline: `${act.user?.year || 'Student'} - ${act.user?.department || 'Engineering'}`,
+          college: act.user?.collegeName || 'DMI College of Engineering'
         },
-        timestamp: 'Just now',
-        title: `Completed & Earned Verified Certificate in ${course.title}`,
-        description: `Successfully finished all modules and scored 98.5% on the final comprehensive assessment. Added ${course.skillsGained.join(', ')} to verified skill portfolio.`,
-        badgeText: '🏆 Certificate Earned',
-        badgeTheme: 'amber',
-        metadata: {
-          certificateId: newCertificate.id,
-          courseId: course.id,
-          courseTitle: course.title,
-          grade: 'Distinction (98.5%)',
-          verificationHash: credId,
-          imageUrl: course.thumbnail
-        },
-        likesCount: 1,
-        isLiked: false,
-        commentsCount: 0,
-        comments: [],
-        sharesCount: 0,
-        isSaved: false
+        likesCount: act.metadata?.likesCount || 0,
+        commentsCount: act.metadata?.commentsCount || 0
+      }));
+      setActivities(backendActs);
+
+      await refreshProfile();
+
+      try {
+        confetti({
+          particleCount: 90,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      } catch (e) {}
+
+      // Format Certificate object for UI
+      const certUIObj: Certificate = {
+        id: certificate._id,
+        title: certificate.title,
+        recipientName: currentUser.name,
+        recipientUid: currentUser.id,
+        courseId: courseId,
+        courseName: certificate.title.replace(' Competency Certificate', ''),
+        issueDate: new Date(certificate.issuedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+        credentialId: certificate.certificateNumber,
+        verificationHash: certificate.verificationCode,
+        verifiedBy: 'THENAM Academic Certification Board & DMI College of Engineering',
+        grade: 'Distinction (98.5% Score)',
+        skills: skillsAdded,
+        qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${certificate.certificateURL}`,
+        issuerLogo: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=100&auto=format&fit=crop&q=80',
+        certificateType: 'Course Mastery',
+        isVerified: true
       };
 
-      setActivities(prev => [automatedActivity, ...prev]);
-    }
-
-    // 6. Push Achievement Notification
-    const newNotification: NotificationItem = {
-      id: `notif_${Date.now()}`,
-      type: 'certificate',
-      title: `Certificate Issued: ${course.title}`,
-      message: `Your verified certificate (${credId}) is now available in your portfolio.`,
-      timestamp: 'Just now',
-      isRead: false,
-      link: `/certificate/${newCertificate.id}`,
-      actionText: 'View Certificate',
-      actionUrl: `/certificate/${newCertificate.id}`
-    };
-
-    setNotifications(prev => [newNotification, ...prev]);
-
-    // 7. Fire celebratory confetti
-    try {
-      confetti({
-        particleCount: 90,
-        spread: 70,
-        origin: { y: 0.6 }
+      setActiveAutomationModal({
+        title: 'Course Completed & Certificate Awarded!',
+        courseName: certUIObj.courseName,
+        certificateId: certUIObj.id,
+        skillsAdded: skillsAdded,
+        xpGained: xpGained
       });
-    } catch (e) {
-      // safe fallback
+
+      return certUIObj;
+    } catch (error) {
+      console.error('Failed to complete course on backend:', error);
+      showToast('Error registering course completion');
+      return null;
     }
-
-    // 8. Open Automation Celebration Modal
-    setActiveAutomationModal({
-      title: 'Course Completed & Certificate Awarded!',
-      courseName: course.title,
-      certificateId: newCertificate.id,
-      skillsAdded: course.skillsGained,
-      xpGained: 450
-    });
-
-    return newCertificate;
   };
 
   const closeAutomationModal = () => {
@@ -525,35 +613,96 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   // Projects
-  const addProject = (proj: Omit<Project, 'id' | 'likesCount' | 'viewsCount' | 'createdAt'>) => {
-    const newProject: Project = {
-      ...proj,
-      id: `proj_${Date.now()}`,
-      likesCount: 0,
-      isLiked: false,
-      viewsCount: 1,
-      createdAt: 'Just now'
-    };
-    setProjects(prev => [newProject, ...prev]);
-    setCurrentUser(prev => ({
-      ...prev,
-      metrics: { ...prev.metrics, projectsCount: prev.metrics.projectsCount + 1, xpPoints: prev.metrics.xpPoints + 200 }
-    }));
-    showToast('Project published to your portfolio!');
+  const addProject = async (proj: Omit<Project, 'id' | 'likesCount' | 'viewsCount' | 'createdAt'>) => {
+    try {
+      const skillsRes = await api.get('/skills');
+      const backendTechIds = proj.techStack.map((techName: string) => {
+        const found = skillsRes.data.find((s: any) => s.name.toLowerCase() === techName.toLowerCase() || s._id === techName);
+        return found ? found._id : null;
+      }).filter(Boolean);
+
+      const dbProj = {
+        title: proj.title,
+        description: proj.description,
+        technologies: backendTechIds,
+        githubURL: proj.githubUrl || '',
+        liveURL: proj.demoUrl || '',
+        imageURL: proj.coverImage || ''
+      };
+
+      await api.post('/projects', dbProj);
+      const res = await api.get('/projects/me');
+      const backendProjects = res.data.map((p: any) => ({
+        ...p,
+        id: p._id,
+        techStack: p.technologies.map((s: any) => s.name || s),
+        coverImage: p.imageURL || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80',
+        githubUrl: p.githubURL,
+        demoUrl: p.liveURL
+      }));
+      setProjects(backendProjects);
+      await refreshProfile();
+      showToast('Project published to your portfolio!');
+    } catch (e: any) {
+      console.error(e);
+      showToast(e.message || 'Failed to add project');
+    }
   };
 
-  const updateProject = (id: string, updated: Partial<Project>) => {
-    setProjects(prev => prev.map(p => p.id === id ? { ...p, ...updated } : p));
-    showToast('Project updated successfully');
+  const updateProject = async (id: string, updated: Partial<Project>) => {
+    try {
+      const dbUpdates: any = {};
+      if (updated.title) dbUpdates.title = updated.title;
+      if (updated.description) dbUpdates.description = updated.description;
+      if (updated.githubUrl !== undefined) dbUpdates.githubURL = updated.githubUrl;
+      if (updated.demoUrl !== undefined) dbUpdates.liveURL = updated.demoUrl;
+      if (updated.coverImage !== undefined) dbUpdates.imageURL = updated.coverImage;
+      if (updated.techStack) {
+        const skillsRes = await api.get('/skills');
+        dbUpdates.technologies = updated.techStack.map((techName: string) => {
+          const found = skillsRes.data.find((s: any) => s.name.toLowerCase() === techName.toLowerCase() || s._id === techName);
+          return found ? found._id : null;
+        }).filter(Boolean);
+      }
+
+      await api.put(`/projects/${id}`, dbUpdates);
+      const res = await api.get('/projects/me');
+      const backendProjects = res.data.map((p: any) => ({
+        ...p,
+        id: p._id,
+        techStack: p.technologies.map((s: any) => s.name || s),
+        coverImage: p.imageURL || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80',
+        githubUrl: p.githubURL,
+        demoUrl: p.liveURL
+      }));
+      setProjects(backendProjects);
+      await refreshProfile();
+      showToast('Project updated successfully');
+    } catch (e: any) {
+      console.error(e);
+      showToast(e.message || 'Failed to update project');
+    }
   };
 
-  const deleteProject = (id: string) => {
-    setProjects(prev => prev.filter(p => p.id !== id));
-    setCurrentUser(prev => ({
-      ...prev,
-      metrics: { ...prev.metrics, projectsCount: Math.max(0, prev.metrics.projectsCount - 1) }
-    }));
-    showToast('Project deleted');
+  const deleteProject = async (id: string) => {
+    try {
+      await api.delete(`/projects/${id}`);
+      const res = await api.get('/projects/me');
+      const backendProjects = res.data.map((p: any) => ({
+        ...p,
+        id: p._id,
+        techStack: p.technologies.map((s: any) => s.name || s),
+        coverImage: p.imageURL || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=1200&auto=format&fit=crop&q=80',
+        githubUrl: p.githubURL,
+        demoUrl: p.liveURL
+      }));
+      setProjects(backendProjects);
+      await refreshProfile();
+      showToast('Project deleted successfully');
+    } catch (e: any) {
+      console.error(e);
+      showToast(e.message || 'Failed to delete project');
+    }
   };
 
   const toggleLikeProject = (id: string) => {
@@ -611,13 +760,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   // Notifications
-  const markNotificationAsRead = (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+  const markNotificationAsRead = async (id: string) => {
+    try {
+      await api.patch(`/notifications/${id}/read`);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+    } catch (e) {
+      console.error('Failed to mark read notification:', e);
+    }
   };
 
-  const markAllNotificationsAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-    showToast('All notifications marked as read');
+  const markAllNotificationsAsRead = async () => {
+    try {
+      await api.patch('/notifications/read-all');
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      showToast('All notifications marked as read');
+    } catch (e) {
+      console.error('Failed to mark all read notifications:', e);
+    }
   };
 
   const unreadNotificationsCount = notifications.filter(n => !n.isRead).length;

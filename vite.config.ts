@@ -12,12 +12,19 @@ export default defineConfig(() => {
       },
     },
     server: {
+      host: "localhost",
+      port: 3001,
+      strictPort: true,
       headers: {
         'Cross-Origin-Opener-Policy': 'same-origin-allow-popups'
       },
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
-      // Do not modifyâ€”file watching is disabled to prevent flickering during agent edits.
-      hmr: process.env.DISABLE_HMR !== 'true',
+      hmr: process.env.DISABLE_HMR === 'true' ? false : {
+        protocol: "ws",
+        host: "localhost",
+        port: 3001,
+        clientPort: 3001
+      },
       // Disable file watching when DISABLE_HMR is true to save CPU during agent edits.
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },

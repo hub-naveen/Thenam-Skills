@@ -7,6 +7,14 @@ export type ActivityType =
   | 'achievement'
   | 'student_post';
 
+export type UserRole = 'student' | 'faculty' | 'admin' | 'recruiter';
+
+export interface CollegeLocation {
+  city: string;
+  state: string;
+  country: string;
+}
+
 export interface StudentProfile {
   id: string;
   name: string;
@@ -20,6 +28,8 @@ export interface StudentProfile {
   bio: string;
   email: string;
   phone?: string;
+  dateOfBirth?: string;
+  collegeLocation?: CollegeLocation;
   githubUrl?: string;
   linkedinUrl?: string;
   portfolioUrl?: string;
@@ -37,6 +47,8 @@ export interface StudentProfile {
   journey: JourneyMilestone[];
   isAvailableForHire?: boolean;
   preferredRoles?: string[];
+  profileCompleted?: boolean;
+  role?: UserRole;
 }
 
 export interface JourneyMilestone {

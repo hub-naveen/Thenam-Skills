@@ -82,11 +82,11 @@ export const Navbar: React.FC = () => {
     { label: 'Achievements', path: '/achievements', icon: Award },
   ];
 
-  const handleSimulateQuickAutomation = () => {
+  const handleSimulateQuickAutomation = async () => {
     // Pick an uncompleted or active course
     const targetCourse = courses.find(c => c.progress < 100) || courses[0];
     if (targetCourse) {
-      triggerCourseCompletionAutomation(targetCourse.id);
+      await triggerCourseCompletionAutomation(targetCourse.id);
     }
   };
 
@@ -365,19 +365,21 @@ export const Navbar: React.FC = () => {
                   </div>
 
                   <div className="pt-2 mt-2 border-t border-slate-100 px-2 space-y-0.5">
-                    <button
-                      onClick={() => {
-                        setIsProfileOpen(false);
-                        navigate('/admin');
-                      }}
-                      className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors text-left"
-                    >
-                      <span className="flex items-center gap-2">
-                        <GraduationCap className="w-4 h-4 text-indigo-500" />
-                        Admin & Faculty Portal
-                      </span>
-                      <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-1.5 py-0.5 rounded">Console</span>
-                    </button>
+                    {(currentUser.role === 'admin' || currentUser.role === 'faculty') && (
+                      <button
+                        onClick={() => {
+                          setIsProfileOpen(false);
+                          navigate('/admin');
+                        }}
+                        className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors text-left"
+                      >
+                        <span className="flex items-center gap-2">
+                          <GraduationCap className="w-4 h-4 text-indigo-500" />
+                          Admin & Faculty Portal
+                        </span>
+                        <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-1.5 py-0.5 rounded">Console</span>
+                      </button>
+                    )}
                     
                     <button
                       onClick={() => {

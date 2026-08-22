@@ -207,9 +207,9 @@ export const HomePage: React.FC = () => {
             </p>
             <button
               id="btn-sidebar-simulate-pipeline"
-              onClick={() => {
+              onClick={async () => {
                 const target = courses.find(c => c.progress < 100) || courses[0];
-                triggerCourseCompletionAutomation(target.id);
+                await triggerCourseCompletionAutomation(target.id);
               }}
               className="w-full py-2 bg-white hover:bg-amber-50 text-amber-900 text-xs font-bold rounded-xl shadow-xs transition-colors"
             >

@@ -53,8 +53,8 @@ export const AssessmentModal: React.FC<AssessmentModalProps> = ({ course, isOpen
 
     // If passed (score >= 70%), trigger the automated pipeline!
     if (calculated >= 70) {
-      setTimeout(() => {
-        const cert = triggerCourseCompletionAutomation(course.id);
+      setTimeout(async () => {
+        const cert = await triggerCourseCompletionAutomation(course.id);
         onClose();
         if (cert) {
           navigate(`/certificate/${cert.id}`);
