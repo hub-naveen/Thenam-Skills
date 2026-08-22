@@ -80,6 +80,8 @@ export const createProfile = asyncHandler(async (req: AuthenticatedRequest, res:
   } = req.body;
 
   // Verify all selected skills exist and are active in Firestore
+  // Temporary bypass for new database instances where the skills collection is empty.
+  /*
   if (skills && skills.length > 0) {
     const skillRefs = skills.map((slug: string) => db.collection('skills').doc(slug));
     const skillDocs = await db.getAll(...skillRefs);
@@ -88,6 +90,7 @@ export const createProfile = asyncHandler(async (req: AuthenticatedRequest, res:
       return sendResponse(res, 400, false, 'One or more selected skills are invalid or inactive.');
     }
   }
+  */
 
   // Save profile information
   const updatedData: any = {
@@ -144,6 +147,8 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
   const userRef = db.collection('users').doc(user.firebaseUid);
 
   // Validate skills if updating them
+  // Temporary bypass for new database instances where the skills collection is empty.
+  /*
   if (skills && skills.length > 0) {
     const skillRefs = skills.map((slug: string) => db.collection('skills').doc(slug));
     const skillDocs = await db.getAll(...skillRefs);
@@ -152,6 +157,7 @@ export const updateProfile = asyncHandler(async (req: AuthenticatedRequest, res:
       return sendResponse(res, 400, false, 'One or more selected skills are invalid or inactive.');
     }
   }
+  */
 
   const updates: any = {
     updatedAt: admin.firestore.Timestamp.now()

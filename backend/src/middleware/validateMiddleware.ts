@@ -8,6 +8,7 @@ export const validateRequest = (schema: AnyZodObject) => {
       req.body = await schema.parseAsync(req.body);
       next();
     } catch (error: any) {
+      console.error('Validation Error Details:', JSON.stringify(error.errors || error, null, 2));
       return res.status(400).json({
         success: false,
         message: 'Request parameters validation failed.',

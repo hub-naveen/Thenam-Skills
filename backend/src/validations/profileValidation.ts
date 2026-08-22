@@ -23,7 +23,7 @@ export const profileCreateSchema = z.object({
     return age >= 15;
   }, 'Student must be at least 15 years old')),
   phoneNumber: z.string().regex(phoneRegex, 'Invalid phone number format'),
-  skills: z.array(z.string().regex(objectIdRegex, 'Invalid Skill ID format')).min(1, 'At least one skill is required'),
+  skills: z.array(z.string().min(1, 'Invalid Skill ID')).min(1, 'At least one skill is required'),
   collegeLocation: z.object({
     city: z.string().min(2, 'City is required'),
     state: z.string().min(2, 'State is required'),

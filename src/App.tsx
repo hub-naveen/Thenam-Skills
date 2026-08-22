@@ -26,6 +26,7 @@ import { MessagesPage } from './pages/MessagesPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AdminPage } from './pages/AdminPage';
+import { OpeningSoonPage } from './pages/OpeningSoonPage';
 
 import { ShieldCheck } from 'lucide-react';
 
@@ -87,19 +88,19 @@ const AppContent: React.FC = () => {
       return <CertificatesPage />;
     }
     if (path.startsWith('/projects') || path.startsWith('/project/')) {
-      return <ProjectsPage />;
+      return <OpeningSoonPage />;
     }
     if (path.startsWith('/events')) {
       return <EventsPage />;
     }
     if (path.startsWith('/communities')) {
-      return <CommunitiesPage />;
+      return <OpeningSoonPage />;
     }
     if (path.startsWith('/talent') || path.startsWith('/search')) {
-      return <TalentPage />;
+      return <OpeningSoonPage />;
     }
     if (path.startsWith('/achievements')) {
-      return <AchievementsPage />;
+      return <OpeningSoonPage />;
     }
     if (path.startsWith('/network')) {
       return <NetworkPage />;
