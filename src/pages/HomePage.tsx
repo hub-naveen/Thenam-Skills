@@ -20,6 +20,7 @@ import { useApp } from '../context/AppContext';
 import { useRouter } from '../context/RouterContext';
 import { LearningActivityCard } from '../components/LearningActivityCard';
 import { CreateActivityModal } from '../components/CreateActivityModal';
+import { CreatePostWidget } from '../components/CreatePostWidget';
 import { ActivityType } from '../types';
 
 export const HomePage: React.FC = () => {
@@ -196,26 +197,8 @@ export const HomePage: React.FC = () => {
             </div>
           </div>
 
-          {/* Automated Experience Simulator Trigger Banner */}
-          <div className="bg-linear-to-br from-amber-500 via-amber-600 to-orange-600 rounded-3xl p-5 text-white shadow-lg space-y-3">
-            <div className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-amber-200" />
-              <h4 className="text-sm font-black">Simulate Achievement</h4>
-            </div>
-            <p className="text-xs text-amber-100 leading-relaxed">
-              Test THENAM's automated pipeline: Course 100% → Tamper-proof Certificate → Skill in Profile → Live Feed Activity.
-            </p>
-            <button
-              id="btn-sidebar-simulate-pipeline"
-              onClick={async () => {
-                const target = courses.find(c => c.progress < 100) || courses[0];
-                await triggerCourseCompletionAutomation(target.id);
-              }}
-              className="w-full py-2 bg-white hover:bg-amber-50 text-amber-900 text-xs font-bold rounded-xl shadow-xs transition-colors"
-            >
-              Trigger Instant Completion
-            </button>
-          </div>
+          {/* Create Post Widget replacing Simulate Achievement */}
+          <CreatePostWidget />
         </aside>
 
         {/* Center Col (6 cols on desktop): Learning Activity Feed */}

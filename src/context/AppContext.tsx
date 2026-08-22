@@ -276,22 +276,35 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       api.get('/activities')
         .then(res => {
           const backendActs = res.data.map((act: any) => ({
-            id: act._id,
+            id: act.id || act._id,
             type: act.type,
             title: act.title,
             description: act.description,
-            timestamp: new Date(act.createdAt).toLocaleDateString(),
+            badgeText: act.badgeText || '💭 Student Post',
+            badgeTheme: act.badgeTheme || 'blue',
+            timestamp: act.createdAt ? new Date(act.createdAt).toLocaleDateString() : 'Just now',
+            metadata: act.metadata || {},
             author: {
-              id: act.user?.firebaseUid || '',
+              id: act.user?.firebaseUid || act.user?.id || '',
               name: act.user?.name || 'Student',
               avatar: act.user?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
               headline: `${act.user?.year || 'Student'} - ${act.user?.department || 'Engineering'}`,
               college: act.user?.collegeName || 'DMI College of Engineering'
             },
-            likesCount: act.metadata?.likesCount || 0,
-            commentsCount: act.metadata?.commentsCount || 0
+            likesCount: act.likesCount || 0,
+            commentsCount: act.commentsCount || 0,
+            sharesCount: act.sharesCount || 0,
+            comments: act.comments || [],
+            isLiked: false,
+            isSaved: false
           }));
-          setActivities(backendActs);
+          
+          // Combine with mock activities so mock posts are still visible
+          setActivities(prev => {
+            const newActs = [...backendActs];
+            const mockActs = INITIAL_ACTIVITIES.filter(mAct => !newActs.find(a => a.id === mAct.id));
+            return [...newActs, ...mockActs];
+          });
         })
         .catch(err => console.error('Failed to load activities from API:', err));
     }
@@ -469,22 +482,33 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       const actsRes = await api.get('/activities');
       const backendActs = actsRes.data.map((act: any) => ({
-        id: act._id,
+        id: act.id || act._id,
         type: act.type,
         title: act.title,
         description: act.description,
-        timestamp: new Date(act.createdAt).toLocaleDateString(),
+        badgeText: act.badgeText || '💭 Student Post',
+        badgeTheme: act.badgeTheme || 'blue',
+        timestamp: act.createdAt ? new Date(act.createdAt).toLocaleDateString() : 'Just now',
+        metadata: act.metadata || {},
         author: {
-          id: act.user?.firebaseUid || '',
+          id: act.user?.firebaseUid || act.user?.id || '',
           name: act.user?.name || 'Student',
           avatar: act.user?.photoURL || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
           headline: `${act.user?.year || 'Student'} - ${act.user?.department || 'Engineering'}`,
           college: act.user?.collegeName || 'DMI College of Engineering'
         },
-        likesCount: act.metadata?.likesCount || 0,
-        commentsCount: act.metadata?.commentsCount || 0
+        likesCount: act.likesCount || 0,
+        commentsCount: act.commentsCount || 0,
+        sharesCount: act.sharesCount || 0,
+        comments: act.comments || [],
+        isLiked: false,
+        isSaved: false
       }));
-      setActivities(backendActs);
+      setActivities(prev => {
+        const newActs = [...backendActs];
+        const mockActs = INITIAL_ACTIVITIES.filter(mAct => !newActs.find(a => a.id === mAct.id));
+        return [...newActs, ...mockActs];
+      });
 
       await refreshProfile();
 
@@ -537,19 +561,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   // Activity Feed interactions
-  const createActivity = (activityData: Omit<ActivityItem, 'id' | 'timestamp' | 'likesCount' | 'isLiked' | 'commentsCount' | 'comments' | 'sharesCount'>) => {
-    const newActivity: ActivityItem = {
-      ...activityData,
-      id: `act_${Date.now()}`,
-      timestamp: 'Just now',
-      likesCount: 0,
-      isLiked: false,
-      commentsCount: 0,
-      comments: [],
-      sharesCount: 0
-    };
-    setActivities(prev => [newActivity, ...prev]);
-    showToast('Activity shared with your THENAM network!');
+  const createActivity = async (activityData: Omit<ActivityItem, 'id' | 'timestamp' | 'likesCount' | 'isLiked' | 'commentsCount' | 'comments' | 'sharesCount'>) => {
+    try {
+      await api.post('/activities', activityData);
+      
+      const newActivity: ActivityItem = {
+        ...activityData,
+        id: `act_${Date.now()}`,
+        timestamp: 'Just now',
+        likesCount: 0,
+        isLiked: false,
+        commentsCount: 0,
+        comments: [],
+        sharesCount: 0
+      };
+      setActivities(prev => [newActivity, ...prev]);
+      showToast('Activity shared with your THENAM network!');
+    } catch (err) {
+      console.error('Failed to create activity:', err);
+      showToast('Failed to publish activity.');
+    }
   };
 
   const toggleLikeActivity = (activityId: string) => {
@@ -603,9 +634,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }));
   };
 
-  const deleteActivity = (activityId: string) => {
+  const deleteActivity = async (activityId: string) => {
     setActivities(prev => prev.filter(act => act.id !== activityId));
     showToast('Activity removed');
+    
+    try {
+      if (activityId.startsWith('act_')) return;
+      await api.delete(`/activities/${activityId}`);
+    } catch (err) {
+      console.error('Failed to delete activity from backend:', err);
+    }
   };
 
   const getCertificateById = (id: string) => {

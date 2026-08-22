@@ -2,6 +2,31 @@ import { ActivityItem } from '../types';
 
 export const INITIAL_ACTIVITIES: ActivityItem[] = [
   {
+    id: 'act_00',
+    type: 'achievement',
+    author: {
+      id: 'usr_francis_01',
+      name: 'Francis Jaison',
+      headline: 'Team Red Dragon',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
+      college: 'Sri Sairam Engineering College'
+    },
+    timestamp: 'Just now',
+    title: 'Won Best Team Award at OneYes Hackathon 2026',
+    description: 'Proud moment for our team Red Dragon 🔥We are excited to share that we secured the "Best Team" award at the OneYes Hackathon 2026, conducted by Thozhil and OneYes InfoTech at Sri Sairam Engineering College, Chennai.Out of 120+ participating teams, we successfully made it to the Top 10 and emerged as the Best Team 🏆Our project, "ZARA – The Pilot", focuses on building an AI-powered autonomous drone intelligence system, aiming to reduce dependency on manual drone pilots and move towards smarter aerial automation.This achievement is the result of teamwork, continuous learning, and pushing our limits under pressure.A big thanks to my amazing teammates [Francis Jaison](https://www.linkedin.com/in/francis-jaison-920a30290/) and [DINESH S](https://www.linkedin.com/in/dinesh-xo/) for their dedication and collaboration 🤝Grateful for this opportunity and looking forward to building more innovative solutions ahead 🚀',
+    badgeText: '🏅 Achievement',
+    badgeTheme: 'rose',
+    metadata: {
+      imageUrls: ['/feed1.jpg']
+    },
+    likesCount: 128,
+    isLiked: false,
+    commentsCount: 12,
+    sharesCount: 8,
+    isSaved: false,
+    comments: []
+  },
+  {
     id: 'act_01',
     type: 'certificate_earned',
     author: {

@@ -22,6 +22,9 @@ export const LearnPage: React.FC = () => {
 
   const [selectedDomain, setSelectedDomain] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  
+  // Modal state for internships
+  const [selectedInternship, setSelectedInternship] = useState<any | null>(null);
 
   const domains = [
     { id: 'all', label: 'All Disciplines' },
@@ -39,8 +42,59 @@ export const LearnPage: React.FC = () => {
     return matchesDomain && matchesSearch;
   });
 
+  const internships = [
+    {
+      id: 'int_ai',
+      title: 'AI & Machine Learning',
+      subtitle: 'Hands-on LLMs, PyTorch, Computer Vision, Model Deployment',
+      icon: <Sparkles className="w-5 h-5 text-indigo-400" />,
+      color: 'bg-indigo-900',
+      badgeColor: 'bg-indigo-500/20 text-indigo-300'
+    },
+    {
+      id: 'int_ui',
+      title: 'UI/UX Design',
+      subtitle: 'Figma Prototyping, Design Systems, User Research, Wireframing',
+      icon: <CheckCircle2 className="w-5 h-5 text-fuchsia-400" />,
+      color: 'bg-fuchsia-900',
+      badgeColor: 'bg-fuchsia-500/20 text-fuchsia-300'
+    },
+    {
+      id: 'int_ba',
+      title: 'Business Analyst',
+      subtitle: 'Data Storytelling, Agile Workflows, Stakeholder Management, Jira/Confluence',
+      icon: <Users className="w-5 h-5 text-amber-400" />,
+      color: 'bg-amber-900',
+      badgeColor: 'bg-amber-500/20 text-amber-300'
+    },
+    {
+      id: 'int_da',
+      title: 'Data Analyst',
+      subtitle: 'SQL, Power BI, Python/Pandas, Statistical Modeling',
+      icon: <Filter className="w-5 h-5 text-emerald-400" />,
+      color: 'bg-emerald-900',
+      badgeColor: 'bg-emerald-500/20 text-emerald-300'
+    },
+    {
+      id: 'int_fs',
+      title: 'Full Stack Web Development',
+      subtitle: 'React, Next.js, Node.js, PostgreSQL, Cloud Deployments',
+      icon: <Play className="w-5 h-5 text-blue-400" />,
+      color: 'bg-blue-900',
+      badgeColor: 'bg-blue-500/20 text-blue-300'
+    },
+    {
+      id: 'int_dm',
+      title: 'Digital Marketing',
+      subtitle: 'Growth Hacking, SEO/SEM, Performance Marketing, Social Campaigns',
+      icon: <Award className="w-5 h-5 text-rose-400" />,
+      color: 'bg-rose-900',
+      badgeColor: 'bg-rose-500/20 text-rose-300'
+    }
+  ];
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
       
       {/* Hero Header */}
       <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 text-white flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
@@ -101,8 +155,75 @@ export const LearnPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Verified Internship Programs */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+          <Award className="w-6 h-6 text-indigo-600" />
+          Verified Internship Programs
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {internships.map((internship) => (
+            <div
+              key={internship.id}
+              onClick={() => setSelectedInternship(internship)}
+              className="group cursor-pointer bg-[#0B1120] rounded-3xl border border-slate-800 hover:border-indigo-500/50 overflow-hidden shadow-xl hover:shadow-indigo-500/10 transition-all flex flex-col justify-between"
+            >
+              <div className="p-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className={`p-2.5 rounded-xl ${internship.color} shadow-inner`}>
+                    {internship.icon}
+                  </div>
+                  <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full ${internship.badgeColor} border border-white/5`}>
+                    8 Weeks • Virtual
+                  </span>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-black text-white group-hover:text-indigo-400 transition-colors">
+                    {internship.title}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                    {internship.subtitle}
+                  </p>
+                </div>
+                
+                <ul className="space-y-2 pt-2 border-t border-slate-800/50">
+                  <li className="flex items-start gap-2 text-[11px] font-medium text-slate-300">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>Live Industry Project</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-[11px] font-medium text-slate-300">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>1-on-1 Mentorship</span>
+                  </li>
+                  <li className="flex items-start gap-2 text-[11px] font-medium text-slate-300">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>Verified DMI Certificate</span>
+                  </li>
+                </ul>
+              </div>
+              
+              <div className="p-4 bg-slate-900/50 border-t border-slate-800">
+                <button className="w-full flex items-center justify-center gap-1.5 py-2.5 px-4 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white text-xs font-bold rounded-xl border border-indigo-600/30 transition-colors">
+                  <span>View Details & Apply</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <hr className="border-slate-200" />
+
       {/* Courses Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+          <BookOpen className="w-6 h-6 text-indigo-600" />
+          Available Courses
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCourses.map((course) => {
           const isCompleted = course.progress === 100;
           const isInProgress = course.progress > 0 && course.progress < 100;
@@ -243,6 +364,92 @@ export const LearnPage: React.FC = () => {
           );
         })}
       </div>
+      </div>
+
+      {/* Internship Paywall Modal */}
+      {selectedInternship && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => setSelectedInternship(null)}
+        >
+          <div 
+            className="relative bg-[#0B1120] rounded-3xl border border-slate-800 shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            
+            {/* Modal Header & Lock */}
+            <div className="p-6 text-center space-y-3 relative overflow-hidden bg-slate-900">
+              <div className="absolute inset-0 bg-indigo-500/10 blur-3xl rounded-full" />
+              <div className="relative z-10 flex justify-center">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-rose-500/20 blur-xl rounded-full" />
+                  <div className="w-14 h-14 bg-slate-800 rounded-full border border-slate-700 flex items-center justify-center relative z-10 shadow-lg">
+                    <svg className="w-6 h-6 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <h3 className="relative z-10 text-sm font-bold text-rose-400 tracking-wide uppercase">
+                Curriculum & Application Locked
+              </h3>
+              <h2 className="relative z-10 text-2xl font-black text-white">
+                {selectedInternship.title}
+              </h2>
+            </div>
+            
+            {/* Content & Benefits */}
+            <div className="p-6 space-y-6">
+              <div className="space-y-3">
+                <p className="text-sm font-bold text-slate-300">Unlock this premium internship to get:</p>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-3 text-sm text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-indigo-400 shrink-0" />
+                    <span>Live Capstone Project with Industry Mentors</span>
+                  </li>
+                  <li className="flex items-start gap-3 text-sm text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-indigo-400 shrink-0" />
+                    <span>Tamper-proof Academic Certificate</span>
+                  </li>
+                  <li className="flex items-start gap-3 text-sm text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-indigo-400 shrink-0" />
+                    <span>Placement / Interview Assistance</span>
+                  </li>
+                </ul>
+              </div>
+              
+              {/* Pricing & CTA */}
+              <div className="bg-slate-900 rounded-2xl p-5 border border-slate-800 flex flex-col items-center gap-3">
+                <span className="bg-amber-500/20 text-amber-400 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md border border-amber-500/30">
+                  Introductory Offer
+                </span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-lg text-slate-500 line-through font-bold">₹2,999</span>
+                  <span className="text-4xl font-black text-white">₹699</span>
+                </div>
+                
+                <button
+                  onClick={() => alert('Payment gateway integration placeholder.')}
+                  className="w-full py-3.5 mt-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition-all flex items-center justify-center gap-2"
+                >
+                  Pay ₹699 to Unlock & Join
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedInternship(null)}
+              className="absolute top-4 right-4 p-2 bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-white rounded-full transition-colors backdrop-blur-md z-50 cursor-pointer"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

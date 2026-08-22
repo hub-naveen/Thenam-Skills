@@ -222,6 +222,7 @@ export interface ActivityItem {
     grade?: string;
     verificationHash?: string;
     imageUrl?: string;
+    imageUrls?: string[];
     metrics?: string;
   };
   likesCount: number;

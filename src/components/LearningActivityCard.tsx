@@ -300,13 +300,30 @@ export const LearningActivityCard: React.FC<LearningActivityCardProps> = ({ acti
           </div>
         )}
 
-        {activity.metadata?.imageUrl && activity.type !== 'project_milestone' && (
+        {(activity.metadata?.imageUrl || (activity.metadata?.imageUrls && activity.metadata.imageUrls.length > 0)) && activity.type !== 'project_milestone' && (
           <div className="mt-4 rounded-xl overflow-hidden border border-slate-200">
-            <img
-              src={activity.metadata.imageUrl}
-              alt="Activity image"
-              className="w-full max-h-72 object-cover"
-            />
+            {activity.metadata?.imageUrls ? (
+              <div className={`grid gap-1 ${activity.metadata.imageUrls.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} ${activity.metadata.imageUrls.length > 2 ? 'grid-rows-2' : ''}`}>
+                {activity.metadata.imageUrls.map((url, index) => (
+                  <img
+                    key={index}
+                    src={url}
+                    alt={`Activity image ${index + 1}`}
+                    className={`w-full object-cover ${
+                      activity.metadata!.imageUrls!.length === 3 && index === 0 
+                        ? 'row-span-2 h-full' 
+                        : 'h-48'
+                    }`}
+                  />
+                ))}
+              </div>
+            ) : (
+              <img
+                src={activity.metadata?.imageUrl}
+                alt="Activity image"
+                className="w-full max-h-72 object-cover"
+              />
+            )}
           </div>
         )}
       </div>
