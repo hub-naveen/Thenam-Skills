@@ -104,7 +104,7 @@ export const LearnPage: React.FC = () => {
             <span>THENAM Industry-Aligned Curriculums</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-            Explore Verified Engineering Courses
+            Explore Verified Engineering Internships 
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
             Hands-on code labs, proctored capstone assessments, and tamper-proof academic credentials certified by DMI & THENAM.
@@ -118,42 +118,11 @@ export const LearnPage: React.FC = () => {
           </div>
           <div className="bg-white/10 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/10 text-center">
             <span className="text-xl font-black text-emerald-400">40+</span>
-            <span className="text-[10px] text-slate-300 block font-medium">Lab Modules</span>
+            <span className="text-[10px] text-slate-300 block font-medium">internship</span>
           </div>
         </div>
       </div>
 
-      {/* Domain Filters & Search */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-3xl border border-slate-200">
-        {/* Domain Tabs */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
-          {domains.map((dom) => (
-            <button
-              key={dom.id}
-              onClick={() => setSelectedDomain(dom.id)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-                selectedDomain === dom.id
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              {dom.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Search */}
-        <div className="relative w-full sm:w-64">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search courses or skills..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 bg-slate-50 text-xs text-slate-800 rounded-xl border border-slate-200 focus:bg-white focus:border-indigo-500 outline-hidden"
-          />
-        </div>
-      </div>
 
       {/* Verified Internship Programs */}
       <div className="space-y-4">
@@ -219,10 +188,6 @@ export const LearnPage: React.FC = () => {
 
       {/* Courses Grid */}
       <div className="space-y-4">
-        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-          <BookOpen className="w-6 h-6 text-indigo-600" />
-          Available Courses
-        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCourses.map((course) => {
           const isCompleted = course.progress === 100;

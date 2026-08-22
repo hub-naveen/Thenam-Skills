@@ -37,13 +37,15 @@ export default function LoginPage() {
         
         {/* Branding Logo & Header */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-tr from-indigo-600 via-indigo-700 to-indigo-900 text-white shadow-xl shadow-indigo-500/20 mb-2 transform hover:scale-105 transition-transform duration-300">
-            <ShieldCheck className="w-9 h-9 text-white" />
-          </div>
+          <img 
+            src="/logo.jpg" 
+            alt="Thenam Campus Logo" 
+            className="inline-block w-16 h-16 rounded-3xl object-cover shadow-xl shadow-indigo-500/20 mb-2 transform hover:scale-105 transition-transform duration-300"
+          />
           
           <div className="space-y-1">
             <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight leading-none">
-              THENAM <span className="text-indigo-600 font-black">SKILLS</span>
+              Thenam <span className="text-indigo-600 font-black">Campus</span>
             </h1>
             <p className="text-xs font-bold text-indigo-600/90 uppercase tracking-widest">
               Verified Student Ecosystem

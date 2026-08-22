@@ -69,7 +69,7 @@ export const INITIAL_EVENTS: EventItem[] = [
       company: 'Thenam Software Solutions',
       avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=200&auto=format&fit=crop&q=80'
     },
-    coverImage: 'D:/Thenam Software Solutions/Thenam-Skills/assets/chatbot-workshop-poster.jpg', // Replace with the actual path to your attached image
+    coverImage: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80',
     description: 'Learn to build intelligent AI Chatbots using modern tools, LLMs, and real-world applications. We will cover Introduction to AI Chatbots, LLMs, API Integration & Tools, and Real-world Use Cases.',
     registeredCount: 842, // Live count representation
     maxCapacity: 1000,

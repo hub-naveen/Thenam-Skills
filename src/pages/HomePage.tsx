@@ -76,7 +76,6 @@ export const HomePage: React.FC = () => {
                 <Flame className="w-3.5 h-3.5 text-amber-400" />
                 {currentUser.metrics.streakDays} Day Learning Streak
               </span>
-              <span className="text-xs text-indigo-200/80 font-medium">Rank #{currentUser.metrics.globalRank} in Chennai</span>
             </div>
             
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
@@ -84,7 +83,7 @@ export const HomePage: React.FC = () => {
             </h1>
             
             <p className="text-xs sm:text-sm text-indigo-100/80 leading-relaxed">
-              Continue your AI engineering pathway. You have verified competencies in <strong className="text-white">Python, Machine Learning, and SQL</strong>.
+              Continue your engineering pathway. You are journey is not alone at <strong className="text-white">Thenam campus</strong>.
             </p>
           </div>
 
@@ -203,50 +202,6 @@ export const HomePage: React.FC = () => {
 
         {/* Center Col (6 cols on desktop): Learning Activity Feed */}
         <main className="lg:col-span-6 space-y-4">
-          
-          {/* Create Activity Bar */}
-          <div className="bg-white rounded-3xl border border-slate-200 p-4 shadow-xs">
-            <div className="flex items-center gap-3">
-              <img
-                src={currentUser.avatar}
-                alt={currentUser.name}
-                className="w-10 h-10 rounded-full object-cover border border-slate-200"
-              />
-              <button
-                id="btn-open-create-activity"
-                onClick={() => setIsCreateModalOpen(true)}
-                className="flex-1 text-left px-4 py-2.5 bg-slate-100 hover:bg-slate-150 text-slate-500 rounded-2xl text-xs font-medium transition-colors"
-              >
-                Share a learning milestone, project update, or study note...
-              </button>
-              <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="p-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl transition-colors shrink-0 shadow-xs"
-                title="Create Post"
-              >
-                <PlusCircle className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Activity Category Filter Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-            {filterTabs.map((tab) => (
-              <button
-                key={tab.value}
-                id={`filter-tab-${tab.value}`}
-                onClick={() => setActiveFilter(tab.value)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-                  activeFilter === tab.value
-                    ? 'bg-slate-900 text-white shadow-xs'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
           {/* Learning Activity Cards Stream */}
           <div className="space-y-4">
             {filteredActivities.length === 0 ? (

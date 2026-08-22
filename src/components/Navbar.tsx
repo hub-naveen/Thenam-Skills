@@ -73,7 +73,7 @@ export const Navbar: React.FC = () => {
 
   const navItems = [
     { label: 'Home', path: '/home', icon: Sparkles },
-   { label: 'Learn', path: '/learn', icon: BookOpen },
+   { label: 'Internship', path: '/learn', icon: BookOpen },
    // { label: 'Network', path: '/network', icon: Users },
     //{ label: 'Projects', path: '/projects', icon: FolderGit2 },
     { label: 'Events', path: '/events', icon: Calendar },
@@ -95,12 +95,14 @@ export const Navbar: React.FC = () => {
               onClick={() => navigate('/home')}
               className="flex items-center gap-2.5 text-left group focus:outline-hidden"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-700 to-indigo-900 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform">
-                <ShieldCheck className="w-6 h-6 text-white" />
-              </div>
+              <img 
+                src="/logo.jpg" 
+                alt="Thenam Campus Logo" 
+                className="w-10 h-10 rounded-xl object-cover shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform"
+              />
               <div className="flex flex-col">
                 <span className="text-lg font-extrabold tracking-tight text-slate-900 leading-tight">
-                  THENAM <span className="text-indigo-600 font-black">SKILLS</span>
+                  Thenam <span className="text-indigo-600 font-black">Campus</span>
                 </span>
                 <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
                   Verified Ecosystem
